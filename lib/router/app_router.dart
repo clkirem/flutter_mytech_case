@@ -1,34 +1,20 @@
-import 'package:flutter/material.dart';
+import 'package:flutter_mytech_case/features/home/views/home_screen.dart';
+import 'package:flutter_mytech_case/features/auth/views/login_screen.dart';
+import 'package:flutter_mytech_case/features/auth/views/register_screen.dart';
+import 'package:flutter_mytech_case/features/category_news/views/category_news_screen.dart';
+import 'package:flutter_mytech_case/features/news_source/views/news_source_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// Eğer auth guard kullanacaksan provider buraya gelecek
 final routerProvider = Provider<GoRouter>((ref) {
-  // AuthState okumak:
-  // final authState = ref.watch(authViewModelProvider);
-
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/',
     routes: [
-      // GoRoute(path: '/login', name: 'login', builder: (context, state) => const LoginPage()),
-      // GoRoute(path: '/home', name: 'home', builder: (context, state) => const HomePage()),
+      GoRoute(path: '/', name: 'register', builder: (context, state) => const CreateAccountScreen()),
+      GoRoute(path: '/login', name: 'login', builder: (context, state) => const SignInScreen()),
+      GoRoute(path: '/newssource', name: 'newssource', builder: (context, state) => const SelectNewsSourcesScreen()),
+      GoRoute(path: '/home', name: 'home', builder: (context, state) => HomeScreen()),
+      GoRoute(path: '/category', name: 'category', builder: (context, state) => CategoryNewsScreen()),
     ],
-
-    // Eğer auth guard istersen:
-    // redirect: (context, state) {
-    //   final loggedIn = ref.read(authViewModelProvider).isLoggedIn;
-    //
-    //   final loggingIn = state.matchedLocation == '/login';
-    //
-    //   if (!loggedIn) {
-    //     return loggingIn ? null : '/login';
-    //   }
-    //
-    //   if (loggedIn && loggingIn) {
-    //     return '/home';
-    //   }
-    //
-    //   return null;
-    // },
   );
 });

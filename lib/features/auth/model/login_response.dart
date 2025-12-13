@@ -1,23 +1,45 @@
 class LoginResponse {
-  final String accessToken;
-  final User user;
+  String? accessToken;
+  User? user;
 
-  LoginResponse({required this.accessToken, required this.user});
+  LoginResponse({this.accessToken, this.user});
 
-  factory LoginResponse.fromJson(Map<String, dynamic> json) {
-    return LoginResponse(accessToken: json['accessToken'], user: User.fromJson(json['user']));
+  LoginResponse.fromJson(Map<String, dynamic> json) {
+    accessToken = json['accessToken'];
+    user = json['user'] != null ? new User.fromJson(json['user']) : null;
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['accessToken'] = this.accessToken;
+    if (this.user != null) {
+      data['user'] = this.user!.toJson();
+    }
+    return data;
   }
 }
 
 class User {
-  final String id;
-  final String name;
-  final String email;
-  final String imageUrl;
+  String? id;
+  String? name;
+  String? email;
+  String? imageUrl;
 
-  User({required this.id, required this.name, required this.email, required this.imageUrl});
+  User({this.id, this.name, this.email, this.imageUrl});
 
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(id: json['id'], name: json['name'], email: json['email'], imageUrl: json['imageUrl']);
+  User.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    name = json['name'];
+    email = json['email'];
+    imageUrl = json['imageUrl'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['id'] = this.id;
+    data['name'] = this.name;
+    data['email'] = this.email;
+    data['imageUrl'] = this.imageUrl;
+    return data;
   }
 }
