@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_mytech_case/core/constants.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import '../repository/news_repository.dart';
 import '../model/news_list_response.dart';
@@ -54,11 +54,11 @@ class NewsViewModel extends StateNotifier<NewsState> {
     state = state.copyWith(isLoading: true, errorMessage: 'clear');
 
     try {
-      if (categoryIndex == 0) {
+      if (categoryIndex == PageConstants.latestNewsIndex) {
         final latest = await _repository.fetchNews(isLatest: true, forYou: false);
 
         state = state.copyWith(latestNews: latest, isLoading: false);
-      } else if (categoryIndex == 1) {
+      } else if (categoryIndex == PageConstants.forYouNewsIndex) {
         final forYou = await _repository.fetchNews(isLatest: false, forYou: true);
 
         state = state.copyWith(forYouNews: forYou, isLoading: false);
@@ -69,7 +69,7 @@ class NewsViewModel extends StateNotifier<NewsState> {
   }
 
   List<Items> getPopularNews(List<Items> source) {
-    return source.where((item) => item.isPopular == true).toList();
+    return source.where((item) => item.isPopular!).toList();
   }
 }
 

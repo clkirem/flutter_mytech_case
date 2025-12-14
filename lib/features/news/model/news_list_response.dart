@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class NewsListResponse {
   List<Items>? items;
   int? total;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mytech_case/core/constants.dart';
 import 'package:flutter_mytech_case/features/news/model/news_list_response.dart';
-// import 'package:flutter_mytech_case/features/news/model/news_item_mapper.dart';
 import 'package:flutter_mytech_case/features/news/view_models/news_view_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,9 +32,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final Color navBarColor = const Color(0xFF151515);
 
   int _currentPage = 0;
-  final int _carouselItemCount = 5;
   int _selectedIndex = 0;
   int _selectedCategoryIndex = 0;
+  bool isLoading = false;
 
   final List<String> categories = const ['Son Haberler', 'Sana Özel', 'Twitter', 'YouTube'];
   final List<NewsItem2> breakingNews = [
@@ -69,10 +69,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   ];
   @override
   void initState() {
-    // Future.microtask(() {
-    //   ref.read(newsViewModelProvider.notifier).fetchAllNews();
-    // });
-
+    Future.microtask(() => {ref.read(newsViewModelProvider.notifier).fetchByCategory(PageConstants.latestNewsIndex)});
     super.initState();
   }
 
@@ -86,7 +83,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final newsState = ref.watch(newsViewModelProvider);
 
-    final List<Items> activeList = _selectedCategoryIndex == 0 ? newsState.latestNews : newsState.forYouNews;
+    final List<Items> activeList = _selectedCategoryIndex == PageConstants.latestNewsIndex
+        ? newsState.latestNews
+        : newsState.forYouNews;
 
     final popularNews = activeList.where((e) => e.isPopular == true).toList();
 
@@ -102,7 +101,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               snap: true,
               elevation: 0,
               toolbarHeight: 56,
-
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -113,7 +111,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const Icon(LucideIcons.alarmClock, color: Colors.white),
                     ],
                   ),
-
                   Row(
                     children: [
                       ClipOval(
@@ -148,10 +145,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
             SliverList(delegate: SliverChildListDelegate([_buildCategories(), const SizedBox(height: 10)])),
 
-            if (_selectedCategoryIndex == 2)
+            if (_selectedCategoryIndex == PageConstants.twitterFeedIndex)
               SliverList(delegate: SliverChildListDelegate([_buildTwitterFeedCategories()])),
 
-            if (_selectedCategoryIndex == 2)
+            if (_selectedCategoryIndex == PageConstants.twitterFeedIndex)
               SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   return _buildTweetTile(tweets[index], darkCardColor);

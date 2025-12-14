@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/',
+    initialLocation: '/login',
     routes: [
       GoRoute(path: '/', name: 'register', builder: (context, state) => const CreateAccountScreen()),
       GoRoute(path: '/login', name: 'login', builder: (context, state) => const SignInScreen()),
