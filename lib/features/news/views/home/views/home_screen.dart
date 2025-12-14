@@ -24,17 +24,9 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  final Color primaryColor = Colors.blue;
-  final Color backgroundColor = const Color(0xFF101922);
-  final Color darkCardColor = const Color(0xFF222222);
-  final Color hintTextColor = const Color(0xFF555D6B);
-  final Color redAccent = Colors.red;
-  final Color navBarColor = const Color(0xFF151515);
-
   int _currentPage = 0;
   int _selectedIndex = 0;
   int _selectedCategoryIndex = 0;
-  bool isLoading = false;
 
   final List<String> categories = const ['Son Haberler', 'Sana Özel', 'Twitter', 'YouTube'];
   final List<NewsItem2> breakingNews = [
@@ -218,7 +210,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildCategories() {
     Color currentAccentColor = redAccent;
-    if (categories[_selectedCategoryIndex] == 'Twitter') {
+    if (_selectedCategoryIndex == PageConstants.twitterFeedIndex) {
       currentAccentColor = twitterBlue;
     }
 

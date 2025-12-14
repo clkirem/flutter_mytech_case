@@ -8,10 +8,7 @@ import 'package:flutter_mytech_case/core/network/api_response.dart';
 import 'package:flutter_mytech_case/core/network/api_service.dart';
 
 const String _kLatestNewsCacheKey = 'latest_news_cache';
-const int _kLatestCacheMaxAge = 3600;
-
 const String _kForYouNewsCacheKey = 'for_you_news_cache';
-const int _kForYouCacheMaxAge = 3600;
 
 class NewsRepository {
   final ApiService api;
@@ -20,26 +17,16 @@ class NewsRepository {
   NewsRepository(this.api, this.cacheManager);
 
   Future<List<Items>> fetchNews({required bool isLatest, required bool forYou}) async {
-    String cacheKey;
-    int maxAgeSeconds;
+    String cacheKey = isLatest ? _kLatestNewsCacheKey : _kForYouNewsCacheKey;
 
-    if (isLatest) {
-      cacheKey = _kLatestNewsCacheKey;
-      maxAgeSeconds = _kLatestCacheMaxAge;
-    } else if (forYou) {
-      cacheKey = _kForYouNewsCacheKey;
-      maxAgeSeconds = _kForYouCacheMaxAge;
-    } else {
-      cacheKey = 'default_news_no_cache';
-      maxAgeSeconds = 0;
-    }
-
-    if (cacheManager != null && maxAgeSeconds > 0) {
-      final cachedData = await cacheManager!.getIfValid(cacheKey, maxAgeSeconds: maxAgeSeconds);
+    if (cacheManager != null) {
+      final cachedData = await cacheManager!.getCache(cacheKey);
 
       if (cachedData != null) {
         try {
-          final List<Items> newsList = cachedData.map((json) => Items.fromJson(json as Map<String, dynamic>)).toList();
+          final List<Items> newsList = (cachedData as List)
+              .map((json) => Items.fromJson(Map<String, dynamic>.from(json)))
+              .toList();
           print('CACHE: $cacheKey cache\'den yüklendi. (1 saatlik geçerlilik)');
           return newsList;
         } catch (e) {
@@ -65,11 +52,8 @@ class NewsRepository {
 
         final List<Items> newsList = apiItems.map((apiItem) => apiItem).toList();
 
-        if (cacheManager != null && maxAgeSeconds > 0) {
-          final List<Map<String, dynamic>> rawJsonList = apiItems.map((e) => e.toJson()).toList();
-          await cacheManager!.put(cacheKey, rawJsonList);
-          print('CACHE: $cacheKey cache\'e kaydedildi. (1 saatlik geçerlilik)');
-        }
+        await cacheManager!.setCache(cacheKey, newsList.map((e) => e.toJson()).toList());
+        print('CACHE: $cacheKey cache\'e kaydedildi. (1 saatlik geçerlilik)');
 
         return newsList;
       } else {
