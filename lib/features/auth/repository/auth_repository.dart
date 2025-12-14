@@ -1,34 +1,61 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_mytech_case/core/network/api_service.dart';
-import 'package:flutter_mytech_case/features/auth/model/register_request.dart';
-import '../model/login_request.dart';
-import '../model/login_response.dart';
+import 'package:flutter_mytech_case/core/network/api_response.dart';
+import '../model/auth_request.dart';
+import '../model/auth_response.dart';
 
 class AuthRepository {
   final ApiService api;
 
   AuthRepository(this.api);
 
-  Future<LoginResponse> login(LoginRequest request) async {
-    final response = await api.post("/api/v1/users/login", data: request.toJson());
+  Future<LoginResponse> login(AuthRequest request) async {
+    try {
+      final response = await api.post("/api/v1/users/login", data: request.toJson());
 
-    return LoginResponse.fromJson(response.data);
+      final apiResponse = ApiResponse<LoginResponse>.fromJson(
+        response.data,
+        (json) => LoginResponse.fromJson(json as Map<String, dynamic>),
+      );
+
+      if (apiResponse.success) {
+        if (apiResponse.result != null) {
+          return apiResponse.result!;
+        }
+        throw Exception(apiResponse.message ?? "Giriş başarılı, ancak yanıt verisi eksik.");
+      } else {
+        throw Exception(apiResponse.message ?? "Giriş işlemi başarısız oldu.");
+      }
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.message;
+      throw Exception(errorMessage);
+    } catch (e) {
+      rethrow;
+    }
   }
 
-  // AuthRepository.dart
-  Future<User> register(RegisterRequest request) async {
+  Future<User> register(AuthRequest request) async {
     try {
       final response = await api.post("/api/v1/users", data: request.toJson());
 
-      // BAŞARILI YANIT GELDİ, LOGLA
-      print("✅ Repository: Register API Yanıtı Başarılı (Status: ${response.statusCode})");
-      print("✅ Repository: Yanıt Verisi (Data): ${response.data}");
+      final apiResponse = ApiResponse<User>.fromJson(
+        response.data,
+        (json) => User.fromJson(json as Map<String, dynamic>),
+      );
 
-      // DİKKAT: response.data null veya boş ise bu satırda hata verebilir.
-      return User.fromJson(response.data);
+      if (apiResponse.success) {
+        if (apiResponse.result != null) {
+          return apiResponse.result!;
+        }
+        throw Exception(apiResponse.message ?? "Kayıt başarılı, ancak kullanıcı verisi eksik.");
+      } else {
+        throw Exception(apiResponse.message ?? "Kayıt işlemi başarısız oldu.");
+      }
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.message;
+      throw Exception(errorMessage);
     } catch (e) {
-      // BURADA BİR HATA YAKALANIRSA, BU MUHTEMELEN MODEL DÖNÜŞÜM HATASIDIR.
-      print("❌ Repository: Register Model Dönüşüm Hatası: $e");
-      rethrow; // Hatayı ViewModel'e geri fırlat.
+      rethrow;
     }
   }
 }

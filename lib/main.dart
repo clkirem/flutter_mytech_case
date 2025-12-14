@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mytech_case/core/di/cache_provider.dart';
 import 'package:flutter_mytech_case/router/app_router.dart';
+import 'package:flutter_mytech_case/utils/cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-void main() {
-  runApp(const ProviderScope(child: MyApp()));
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final cacheManager = await CacheManager.init();
+
+  runApp(
+    ProviderScope(
+      overrides: [cacheManagerProvider.overrideWithValue(AsyncValue.data(cacheManager))],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends ConsumerWidget {
@@ -17,16 +28,13 @@ class MyApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       routerConfig: router,
       builder: (context, child) {
-        return Container(
-          color: Colors.black, // veya Colors.white
-          child: child,
-        );
+        return Container(color: Colors.black, child: child);
       },
       theme: ThemeData(
         useSystemColors: false,
         canvasColor: Colors.white,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue, background: Colors.white),
-        scaffoldBackgroundColor: Colors.black, // 🔥 arka plan garanti beyaz
+        scaffoldBackgroundColor: Colors.black,
       ),
     );
   }

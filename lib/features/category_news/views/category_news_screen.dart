@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-// News Model (Haber verisi için basit bir model)
 class NewsItem {
   final String source;
   final String time;
@@ -116,7 +115,7 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
                     onTap: () {
                       context.pop();
                     },
-                    child: const Icon(LucideIcons.arrowLeftCircle, color: Colors.white),
+                    child: const Icon(LucideIcons.circleArrowLeft, color: Colors.white),
                   ),
                 ],
               ),
@@ -142,8 +141,6 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
           ],
         ),
       ),
-
-      // bottomNavigationBar: _buildBottomNavBar(navBarColor, primaryColor),
     );
   }
 
@@ -243,7 +240,6 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
             ),
             const SizedBox(height: 10),
 
-            // Başlık ve Resim
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -260,16 +256,13 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
                     padding: const EdgeInsets.only(left: 10),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      // Resim varsa göster
+
                       child: Image.asset(news.imageUrl!, width: 120, height: 80, fit: BoxFit.cover),
                     ),
                   ),
               ],
             ),
             if (hasImage) const SizedBox(height: 15),
-
-            // Resim varsa, ek olarak alt aksiyon sırası (Opsiyonel: İlk görselde alt aksiyon sırası yok, sadece resimli haberde vardı)
-            // if (hasImage) _buildActionRow(news.sourceColor),
           ],
         ),
       ),
@@ -279,18 +272,15 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
   Widget _buildNotificationIcon() {
     return Stack(
       children: [
-        // Zil İkonu
         Center(child: const Icon(LucideIcons.bell, color: Colors.white, size: 15)),
 
-        // Kırmızı Rozet (Badge)
         Positioned(
           right: 9,
           top: 6,
           child: Container(
-            //padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(color: redAccent, borderRadius: BorderRadius.circular(6)),
             constraints: const BoxConstraints(minWidth: 8, minHeight: 8),
-            // Eğer rozet içinde sayı göstermek isterseniz (Opsiyonel)
+
             /*
               child: Text(
                 '$_notificationCount',
@@ -324,7 +314,7 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
                 });
               },
               child: Padding(
-                padding: const EdgeInsets.only(right: 20), // Sekmeler arası boşluk
+                padding: const EdgeInsets.only(right: 20),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -340,7 +330,7 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
                       Padding(
                         padding: const EdgeInsets.only(top: 4.0),
                         child: Container(
-                          width: categories[index].length * 7.0, // Metin uzunluğuna göre ayarlama
+                          width: categories[index].length * 7.0,
                           height: 3,
                           decoration: BoxDecoration(color: redAccent, borderRadius: BorderRadius.circular(2)),
                         ),
@@ -355,10 +345,7 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
     );
   }
 
-  // --- YENİ YARDIMCI WIDGET ---
-
   Widget _buildPopularNewsHeader() {
-    // "Popüler Haberler" Başlığı (Kaydırılabilir içerik içinde)
     return const Padding(
       padding: EdgeInsets.fromLTRB(16.0, 10.0, 16.0, 10.0),
       child: Text(
@@ -368,9 +355,6 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
     );
   }
 
-  // --- Diğer Yardımcı Widget'lar (Önceki koddan alınmıştır) ---
-
-  // Bottom Navigation Bar Widget'ı
   Widget _buildBottomNavBar(Color navBarColor, Color primaryColor) {
     return Container(
       decoration: BoxDecoration(
@@ -407,10 +391,7 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
     );
   }
 
-  // ... _CategoryNewsScreenState sınıfı içinde ...
-
   Widget _buildPopularNewsCarousel(BuildContext context) {
-    // Popüler haberler için örnek başlıklar ve kaynaklar (Veri çeşitliliği için)
     final List<Map<String, dynamic>> popularItems = [
       {
         'title': 'Almanya Başbakanı, Rusya’nın dondurulmuş varlıklarıyla ilgili görüş...',
@@ -423,7 +404,6 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
         'isSpecial': false,
       },
       {'title': 'Türkiye\'de Elektrikli Otomobil Satışları Rekor Kırdı', 'source': 'Oto Haber', 'isSpecial': false},
-      // ... daha fazla örnek ...
     ];
 
     return Padding(
@@ -431,9 +411,8 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Popüler Haberler Carousel
           Container(
-            height: 250, // Yüksekliği tasarıma uygun şekilde artırdım
+            height: 250,
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: darkCardColor),
             child: PageView.builder(
               itemCount: popularItems.length,
@@ -447,26 +426,26 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
                 return _buildCarouselItem(
                   title: item['title'],
                   sourceName: item['source'],
-                  sourceColor: Colors.white, // Kaynak rengi bu tasarımda genel olarak beyaz
+                  sourceColor: Colors.white,
                   isSpecial: item['isSpecial'],
                 );
               },
             ),
           ),
 
-          const SizedBox(height: 15), // Noktalar için boşluk artırıldı
-          // Nokta Göstergeleri (Dot Indicators)
+          const SizedBox(height: 15),
+
           Center(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
-                popularItems.length, // Sayı item listesinden alınır
+                popularItems.length,
                 (index) => Container(
                   margin: const EdgeInsets.symmetric(horizontal: 3),
                   width: index == _currentPage ? 12 : 6,
                   height: 6,
                   decoration: BoxDecoration(
-                    color: index == _currentPage ? redAccent : hintTextColor.withOpacity(0.5), // Aktif nokta kırmızı
+                    color: index == _currentPage ? redAccent : hintTextColor.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -478,101 +457,79 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
     );
   }
 
-  // ... (Diğer widget'lar) ...
-
-  // ... _CategoryNewsScreenState sınıfı içinde ...
-
-  // Carousel içindeki tek bir öğe (Görsel ve metin)
   Widget _buildCarouselItem({
     required String title,
     required String sourceName,
     required Color sourceColor,
     required bool isSpecial,
   }) {
-    // Özel etiket yerine, tasarımda "Gündem" gibi genel bir etiket var.
     final String tagLabel = isSpecial ? 'Gündem' : 'Siyaset';
 
     return Stack(
       children: [
-        // 1. Arka Plan Resmi (Tamamen doldurur)
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             image: DecorationImage(
-              // Bu görseli kullanmak için assets/haber.jpg dosyanızın olması gerekir.
               image: const AssetImage('assets/haber.jpg'),
               fit: BoxFit.cover,
-              colorFilter: ColorFilter.mode(
-                Colors.black.withOpacity(0.15), // Başlıkların okunurluğu için hafif karanlık katman
-                BlendMode.darken,
-              ),
+              colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.15), BlendMode.darken),
             ),
           ),
         ),
 
-        // 2. İçerik ve İkonlar
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween, // İçeriği üste ve alta itmek için
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ÜST KISIM (Etiket ve Kaydetme İkonu)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Sol Üst Etiket (Gündem, Özel vb.)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: redAccent, // Tasarımdaki kırmızı etiket rengi
-                      borderRadius: BorderRadius.circular(15),
-                    ),
+                    decoration: BoxDecoration(color: redAccent, borderRadius: BorderRadius.circular(15)),
                     child: Text(
                       tagLabel,
                       style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
                     ),
                   ),
 
-                  // Sağ Üst Kaydetme İkonu (Kırmızı dolgulu)
                   ClipOval(
                     child: Container(
                       height: 35,
                       width: 35,
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: redAccent.withOpacity(0.5), // Yarı şeffaf arka plan
+                        color: redAccent.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(LucideIcons.bookmark, color: redAccent, size: 20), // Kırmızı kaydetme ikonu
+                      child: Icon(LucideIcons.bookmark, color: redAccent, size: 20),
                     ),
                   ),
                 ],
               ),
 
-              // ALT KISIM (Başlık ve Kaynak Bilgisi)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Haber Başlığı
                   Text(
                     title,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      shadows: [Shadow(blurRadius: 5.0, color: Colors.black)], // Okunurluğu artırmak için gölge
+                      shadows: [Shadow(blurRadius: 5.0, color: Colors.black)],
                     ),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
 
-                  // Kaynak İkonu ve Metni
                   Row(
                     children: [
-                      // Kaynak Logosunun Yer Tutucusu (M harfli yuvarlak)
                       ClipOval(
                         child: Container(
                           width: 24,
@@ -587,7 +544,7 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // Kaynak Adı
+
                       Text(
                         sourceName,
                         style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
@@ -603,7 +560,6 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
     );
   }
 
-  // ... (Diğer widget'lar) ...
   Widget _buildSectionHeader(String title, Color accentColor) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
@@ -636,7 +592,6 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
           children: [
             Row(
               children: [
-                // Kaynak Logosunun Yer Tutucusu (M harfli yuvarlak)
                 ClipOval(
                   child: Container(
                     width: 40,
@@ -651,7 +606,7 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // Kaynak Adı
+
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -681,13 +636,6 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                // Padding(
-                //   padding: const EdgeInsets.only(left: 10),
-                //   child: ClipRRect(
-                //     borderRadius: BorderRadius.circular(8),
-                //     child: Container(width: 100, height: 60, color: hintTextColor),
-                //   ),
-                // ),
               ],
             ),
             const SizedBox(height: 15),
@@ -752,13 +700,6 @@ class _CategoryNewsScreenState extends State<CategoryNewsScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                // Padding(
-                //   padding: const EdgeInsets.only(left: 10),
-                //   child: ClipRRect(
-                //     borderRadius: BorderRadius.circular(8),
-                //     child: Container(width: 100, height: 60, color: hintTextColor),
-                //   ),
-                // ),
               ],
             ),
             const SizedBox(height: 15),

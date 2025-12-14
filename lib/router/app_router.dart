@@ -1,4 +1,4 @@
-import 'package:flutter_mytech_case/features/home/views/home_screen.dart';
+import 'package:flutter_mytech_case/features/news/views/home/views/home_screen.dart';
 import 'package:flutter_mytech_case/features/auth/views/login_screen.dart';
 import 'package:flutter_mytech_case/features/auth/views/register_screen.dart';
 import 'package:flutter_mytech_case/features/category_news/views/category_news_screen.dart';

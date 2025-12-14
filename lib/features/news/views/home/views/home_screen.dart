@@ -1,27 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mytech_case/features/news/model/news_list_response.dart';
+// import 'package:flutter_mytech_case/features/news/model/news_item_mapper.dart';
+import 'package:flutter_mytech_case/features/news/view_models/news_view_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-// News Model (Haber verisi için basit bir model)
-class NewsItem {
+class NewsItem2 {
   final String source;
   final String time;
   final String title;
   final String? imageUrl;
   final Color sourceColor;
 
-  NewsItem(this.source, this.time, this.title, this.sourceColor, {this.imageUrl});
+  NewsItem2(this.source, this.time, this.title, this.sourceColor, {this.imageUrl});
 }
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  // --- Theme Renkleri ---
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   final Color primaryColor = Colors.blue;
   final Color backgroundColor = const Color(0xFF101922);
   final Color darkCardColor = const Color(0xFF222222);
@@ -29,23 +31,21 @@ class _HomeScreenState extends State<HomeScreen> {
   final Color redAccent = Colors.red;
   final Color navBarColor = const Color(0xFF151515);
 
-  // --- State ---
   int _currentPage = 0;
   final int _carouselItemCount = 5;
-  int _selectedIndex = 0; // Aktif navigasyon öğesi indeksi
+  int _selectedIndex = 0;
   int _selectedCategoryIndex = 0;
 
-  // --- Örnek Veri ---
   final List<String> categories = const ['Son Haberler', 'Sana Özel', 'Twitter', 'YouTube'];
-  final List<NewsItem> breakingNews = [
-    NewsItem(
+  final List<NewsItem2> breakingNews = [
+    NewsItem2(
       'Milli Gazete - Son Dakika',
       '4  Aralık Perşembe- 1 saat önce',
       'Türk Yargısı’ndan, Garanti Dubai’de Gayrimenkul Yatırımına İlgi',
       const Color(0xFFD0021B),
       imageUrl: 'assets/haber_resmi.png',
     ),
-    NewsItem(
+    NewsItem2(
       'A Haber - Son Dakika',
       '4  Aralık Perşembe-3 saat önce',
       'Destekler Geliyor: Çılgın Sedat’tan yürek ısıtan paylaşım: "Sen bizim mukaddesimiz"',
@@ -53,20 +53,28 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   ];
 
-  final List<NewsItem> agendaNews = [
-    NewsItem(
+  final List<NewsItem2> agendaNews = [
+    NewsItem2(
       'Sputnik Türkçe',
       '4  Aralık Perşembe-2 saat önce',
       'TBMM Başkanı Kurtulmuş: Süreç en hassas ve kırılgan döneminde',
       const Color(0xFF4A90E2),
     ),
-    NewsItem(
+    NewsItem2(
       'Akşam Gazetesi',
       '4  Aralık Perşembe-1 saat önce',
       'Yurt dışından nasıl oyuna dönebiliriz? Meğer o soruna sızmışız',
       const Color(0xFF4A90E2),
     ),
   ];
+  @override
+  void initState() {
+    // Future.microtask(() {
+    //   ref.read(newsViewModelProvider.notifier).fetchAllNews();
+    // });
+
+    super.initState();
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -76,20 +84,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final newsState = ref.watch(newsViewModelProvider);
+
+    final List<Items> activeList = _selectedCategoryIndex == 0 ? newsState.latestNews : newsState.forYouNews;
+
+    final popularNews = activeList.where((e) => e.isPopular == true).toList();
+
     return Scaffold(
       backgroundColor: backgroundColor,
       body: SafeArea(
         child: CustomScrollView(
           slivers: <Widget>[
-            // 1. En Üst Sabit Çubuk (Sadece İkonlar)
             SliverAppBar(
               backgroundColor: backgroundColor,
-              floating: true, // Aşağı kaydırınca hemen görünür
-              pinned: true, // Yukar kaydırılınca üstte sabit kalır
-              snap: true, // Floating ile birlikte kullanılır
+              floating: true,
+              pinned: true,
+              snap: true,
               elevation: 0,
-              toolbarHeight: 56, // Standart yükseklik
-              // Title: Sadece Menü, Arama ve Profil
+              toolbarHeight: 56,
+
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -127,51 +140,43 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
 
-              // AppBar'ın altındaki ince çizgi
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(1.0),
                 child: Container(height: 1.0, color: hintTextColor.withOpacity(0.2)),
               ),
             ),
 
-            SliverList(
-              delegate: SliverChildListDelegate([
-                _buildCategories(), // Bu widget _selectedCategoryIndex'i güncelliyor
-                const SizedBox(height: 10),
-              ]),
-            ),
+            SliverList(delegate: SliverChildListDelegate([_buildCategories(), const SizedBox(height: 10)])),
 
-            // 3. Kategoriye Özel İçerik
-            if (_selectedCategoryIndex == 2) // Eğer "Twitter" seçiliyse (index 2)
-              SliverList(
-                delegate: SliverChildListDelegate([
-                  // Twitter Feed'ine Özel Kategori Butonları (Popüler, Sana Özel)
-                  _buildTwitterFeedCategories(),
-                ]),
-              ),
+            if (_selectedCategoryIndex == 2)
+              SliverList(delegate: SliverChildListDelegate([_buildTwitterFeedCategories()])),
 
-            if (_selectedCategoryIndex == 2) // Eğer "Twitter" seçiliyse
+            if (_selectedCategoryIndex == 2)
               SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
-                  // Her bir Twitter gönderisini oluştur
                   return _buildTweetTile(tweets[index], darkCardColor);
                 }, childCount: tweets.length),
               )
-            else // Eğer "Son Haberler" (index 0) veya diğerleri seçiliyse
+            else
               SliverList(
                 delegate: SliverChildListDelegate([
-                  // Popüler Haberler Başlığı ve Slider (Kaydırma sırasında kaybolan kısım)
                   _buildPopularNewsHeader(),
-                  _buildPopularNewsCarousel(context),
+                  _buildPopularNewsCarousel(context, popularNews),
+                  SizedBox(height: 15),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      popularNews.length,
+                      (index) => _buildDotIndicator(index: index, currentPage: _currentPage),
+                    ),
+                  ),
                   const SizedBox(height: 20),
 
-                  // Son Dakika Bölümü (Liste)
                   _buildSectionHeader('Son Dakika', redAccent),
                   ...breakingNews.map((news) => _buildBreakingNewsTile(news, darkCardColor, redAccent)).toList(),
                   _buildShowMoreButton(redAccent),
                   const SizedBox(height: 20),
 
-                  // Gündem Bölümü (Liste)
                   _buildSectionHeader('Gündem', Colors.blue),
                   ...agendaNews.map((news) => _buildAgendaNewsTile(news, darkCardColor)).toList(),
                   _buildShowMoreButton(primaryColor),
@@ -182,7 +187,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
 
-      // Sabit Alt Navigasyon Çubuğu
       bottomNavigationBar: _buildBottomNavBar(navBarColor, primaryColor),
     );
   }
@@ -190,18 +194,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildNotificationIcon() {
     return Stack(
       children: [
-        // Zil İkonu
         Center(child: const Icon(LucideIcons.bell, color: Colors.white, size: 15)),
 
-        // Kırmızı Rozet (Badge)
         Positioned(
           right: 9,
           top: 6,
           child: Container(
-            //padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(color: redAccent, borderRadius: BorderRadius.circular(6)),
             constraints: const BoxConstraints(minWidth: 8, minHeight: 8),
-            // Eğer rozet içinde sayı göstermek isterseniz (Opsiyonel)
+
             /*
               child: Text(
                 '$_notificationCount',
@@ -219,10 +220,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCategories() {
-    // Seçilen kategoriye göre vurgu rengini belirle
     Color currentAccentColor = redAccent;
     if (categories[_selectedCategoryIndex] == 'Twitter') {
-      currentAccentColor = twitterBlue; // Eğer Twitter seçiliyse Mavi kullan
+      currentAccentColor = twitterBlue;
     }
 
     return Padding(
@@ -234,7 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
           itemCount: categories.length,
           itemBuilder: (context, index) {
             bool isSelected = index == _selectedCategoryIndex;
-            // Eğer Twitter sekmesi ise, vurgu rengini mavi yap
+
             final Color highlightColor = isSelected && categories[index] == 'Twitter'
                 ? twitterBlue
                 : isSelected
@@ -246,32 +246,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 setState(() {
                   _selectedCategoryIndex = index;
                 });
+
+                ref.read(newsViewModelProvider.notifier).fetchByCategory(index);
               },
+
               child: Padding(
-                padding: const EdgeInsets.only(right: 20), // Sekmeler arası boşluk
+                padding: const EdgeInsets.only(right: 20),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       categories[index],
-                      style: TextStyle(
-                        // Vurgu rengini burada kullanıyoruz
-                        color: highlightColor,
-                        fontWeight: FontWeight.normal,
-                        fontSize: 16,
-                      ),
+                      style: TextStyle(color: highlightColor, fontWeight: FontWeight.normal, fontSize: 16),
                     ),
                     if (isSelected)
                       Padding(
                         padding: const EdgeInsets.only(top: 4.0),
                         child: Container(
-                          width: categories[index].length * 7.0, // Metin uzunluğuna göre ayarlama
+                          width: categories[index].length * 7.0,
                           height: 3,
-                          decoration: BoxDecoration(
-                            // Vurgu rengini alt çizgi için de kullanıyoruz
-                            color: highlightColor,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
+                          decoration: BoxDecoration(color: highlightColor, borderRadius: BorderRadius.circular(2)),
                         ),
                       ),
                   ],
@@ -284,10 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- YENİ YARDIMCI WIDGET ---
-
   Widget _buildPopularNewsHeader() {
-    // "Popüler Haberler" Başlığı (Kaydırılabilir içerik içinde)
     return const Padding(
       padding: EdgeInsets.fromLTRB(16.0, 10.0, 16.0, 10.0),
       child: Text(
@@ -297,9 +288,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- Diğer Yardımcı Widget'lar (Önceki koddan alınmıştır) ---
-
-  // Bottom Navigation Bar Widget'ı
   Widget _buildBottomNavBar(Color navBarColor, Color primaryColor) {
     return Container(
       decoration: BoxDecoration(
@@ -319,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
         unselectedLabelStyle: TextStyle(fontSize: 10, color: hintTextColor),
 
         items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(LucideIcons.home, size: 24), label: 'Anasayfa'),
+          BottomNavigationBarItem(icon: Icon(LucideIcons.newspaper, size: 24), label: 'Anasayfa'),
           BottomNavigationBarItem(icon: Icon(LucideIcons.compass, size: 24), label: 'e-gündem'),
           BottomNavigationBarItem(
             icon: Container(
@@ -336,70 +324,34 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ... _HomeScreenState sınıfı içinde ...
-
-  Widget _buildPopularNewsCarousel(BuildContext context) {
-    // Popüler haberler için örnek başlıklar ve kaynaklar (Veri çeşitliliği için)
-    final List<Map<String, dynamic>> popularItems = [
-      {
-        'title': 'Almanya Başbakanı, Rusya’nın dondurulmuş varlıklarıyla ilgili görüş...',
-        'source': 'Milli Gazete',
-        'isSpecial': true,
-      },
-      {
-        'title': 'Yeni Yapay Zeka Yasası, Dijital Dünyayı Nasıl Değiştirecek?',
-        'source': 'Tech Gündem',
-        'isSpecial': false,
-      },
-      {'title': 'Türkiye\'de Elektrikli Otomobil Satışları Rekor Kırdı', 'source': 'Oto Haber', 'isSpecial': false},
-      // ... daha fazla örnek ...
-    ];
+  Widget _buildPopularNewsCarousel(BuildContext context, List<Items> popularNews) {
+    if (popularNews.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Popüler Haberler Carousel
           Container(
-            height: 250, // Yüksekliği tasarıma uygun şekilde artırdım
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: darkCardColor),
+            height: 250,
             child: PageView.builder(
-              itemCount: popularItems.length,
-              onPageChanged: (int index) {
-                setState(() {
-                  _currentPage = index;
-                });
-              },
+              itemCount: popularNews.length,
+              onPageChanged: (index) => setState(() => _currentPage = index),
               itemBuilder: (context, index) {
-                final item = popularItems[index];
+                final news = popularNews[index];
                 return _buildCarouselItem(
-                  title: item['title'],
-                  sourceName: item['source'],
-                  sourceColor: Colors.white, // Kaynak rengi bu tasarımda genel olarak beyaz
-                  isSpecial: item['isSpecial'],
+                  title: news.title ?? '',
+                  sourceName: news.sourceName ?? news.sourceTitle ?? '',
+                  sourceColor: news.colorCode != null
+                      ? Color(int.parse('0xFF' + news.colorCode!.replaceFirst('#', '')))
+                      : Colors.red,
+                  imageUrl: news.imageUrl ?? 'https://via.placeholder.com/400x200.png?text=No+Image',
+                  categoryName: news.categoryName ?? '',
+                  sourceProfilePictureUrl:
+                      news.sourceProfilePictureUrl ?? 'https://via.placeholder.com/100x100.png?text=No+Image',
                 );
               },
-            ),
-          ),
-
-          const SizedBox(height: 15), // Noktalar için boşluk artırıldı
-          // Nokta Göstergeleri (Dot Indicators)
-          Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                popularItems.length, // Sayı item listesinden alınır
-                (index) => Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: index == _currentPage ? 12 : 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: index == _currentPage ? redAccent : hintTextColor.withOpacity(0.5), // Aktif nokta kırmızı
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-              ),
             ),
           ),
         ],
@@ -407,116 +359,85 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ... (Diğer widget'lar) ...
-
-  // ... _HomeScreenState sınıfı içinde ...
-
-  // Carousel içindeki tek bir öğe (Görsel ve metin)
   Widget _buildCarouselItem({
     required String title,
     required String sourceName,
     required Color sourceColor,
-    required bool isSpecial,
+    required String categoryName,
+    required String imageUrl,
+    required String sourceProfilePictureUrl,
   }) {
-    // Özel etiket yerine, tasarımda "Gündem" gibi genel bir etiket var.
-    final String tagLabel = isSpecial ? 'Gündem' : 'Siyaset';
-
     return Stack(
       children: [
-        // 1. Arka Plan Resmi (Tamamen doldurur)
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            image: DecorationImage(
-              // Bu görseli kullanmak için assets/haber.jpg dosyanızın olması gerekir.
-              image: const AssetImage('assets/haber.jpg'),
-              fit: BoxFit.cover,
-              colorFilter: ColorFilter.mode(
-                Colors.black.withOpacity(0.15), // Başlıkların okunurluğu için hafif karanlık katman
-                BlendMode.darken,
-              ),
-            ),
+            image: DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover),
           ),
         ),
 
-        // 2. İçerik ve İkonlar
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween, // İçeriği üste ve alta itmek için
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ÜST KISIM (Etiket ve Kaydetme İkonu)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Sol Üst Etiket (Gündem, Özel vb.)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: redAccent, // Tasarımdaki kırmızı etiket rengi
-                      borderRadius: BorderRadius.circular(15),
-                    ),
+                    decoration: BoxDecoration(color: sourceColor, borderRadius: BorderRadius.circular(15)),
                     child: Text(
-                      tagLabel,
+                      categoryName,
                       style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
                     ),
                   ),
 
-                  // Sağ Üst Kaydetme İkonu (Kırmızı dolgulu)
                   ClipOval(
                     child: Container(
                       height: 35,
                       width: 35,
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: redAccent.withOpacity(0.5), // Yarı şeffaf arka plan
+                        color: redAccent.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(LucideIcons.bookmark, color: redAccent, size: 20), // Kırmızı kaydetme ikonu
+                      child: Icon(LucideIcons.bookmark, color: redAccent, size: 20),
                     ),
                   ),
                 ],
               ),
 
-              // ALT KISIM (Başlık ve Kaynak Bilgisi)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Haber Başlığı
                   Text(
                     title,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      shadows: [Shadow(blurRadius: 5.0, color: Colors.black)], // Okunurluğu artırmak için gölge
+                      shadows: [Shadow(blurRadius: 5.0, color: Colors.black)],
                     ),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
 
-                  // Kaynak İkonu ve Metni
                   Row(
                     children: [
-                      // Kaynak Logosunun Yer Tutucusu (M harfli yuvarlak)
                       ClipOval(
                         child: Container(
                           width: 24,
                           height: 24,
                           color: Colors.white,
-                          child: Center(
-                            child: Text(
-                              sourceName.substring(0, 1),
-                              style: TextStyle(color: darkCardColor, fontSize: 14, fontWeight: FontWeight.bold),
-                            ),
-                          ),
+                          child: Center(child: Image.network(sourceProfilePictureUrl)),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // Kaynak Adı
+
                       Text(
                         sourceName,
                         style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
@@ -532,7 +453,24 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ... (Diğer widget'lar) ...
+  Widget _buildDotIndicator({required int index, required int currentPage}) {
+    final bool isActive = index == currentPage;
+
+    const Color activeColor = Colors.redAccent;
+    final Color inactiveColor = Colors.redAccent.withOpacity(0.3);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      margin: const EdgeInsets.symmetric(horizontal: 4.0),
+      height: 8.0,
+      width: 8.0,
+      decoration: BoxDecoration(
+        color: isActive ? activeColor : inactiveColor,
+        borderRadius: BorderRadius.circular(4.0),
+      ),
+    );
+  }
+
   Widget _buildSectionHeader(String title, Color accentColor) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
@@ -554,7 +492,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBreakingNewsTile(NewsItem news, Color cardColor, Color sourceColor) {
+  Widget _buildBreakingNewsTile(NewsItem2 news, Color cardColor, Color sourceColor) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Container(
@@ -565,7 +503,6 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Row(
               children: [
-                // Kaynak Logosunun Yer Tutucusu (M harfli yuvarlak)
                 ClipOval(
                   child: Container(
                     width: 40,
@@ -580,7 +517,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // Kaynak Adı
+
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -610,13 +547,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                // Padding(
-                //   padding: const EdgeInsets.only(left: 10),
-                //   child: ClipRRect(
-                //     borderRadius: BorderRadius.circular(8),
-                //     child: Container(width: 100, height: 60, color: hintTextColor),
-                //   ),
-                // ),
               ],
             ),
             const SizedBox(height: 15),
@@ -626,7 +556,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildAgendaNewsTile(NewsItem news, Color cardColor) {
+  Widget _buildAgendaNewsTile(NewsItem2 news, Color cardColor) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Container(
@@ -637,7 +567,6 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Row(
               children: [
-                // Kaynak Logosunun Yer Tutucusu (M harfli yuvarlak)
                 ClipOval(
                   child: Container(
                     width: 40,
@@ -652,7 +581,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // Kaynak Adı
+
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -682,13 +611,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                // Padding(
-                //   padding: const EdgeInsets.only(left: 10),
-                //   child: ClipRRect(
-                //     borderRadius: BorderRadius.circular(8),
-                //     child: Container(width: 100, height: 60, color: hintTextColor),
-                //   ),
-                // ),
               ],
             ),
             const SizedBox(height: 15),
@@ -743,35 +665,27 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  final Color twitterBlue = const Color(0xFF1DA1F2); // Twitter Mavi rengi
+  final Color twitterBlue = const Color(0xFF1DA1F2);
 
-  // --- Örnek Twitter Gönderi Verisi ---
   final List<Map<String, String>> tweets = [
-    {
-      'time': '37 dakika önce',
-      'title': 'Japonya büyük bir demans kriziyle karşı karşıya',
-      'link': 'https://t.co/9bbjEijekl',
-    },
+    {'time': '37 dakika önce', 'title': 'Japonya büyük bir demans kriziyle karşı karşıya', 'link': 'https:'},
     {
       'time': '47 dakika önce',
       'title': 'Sosyal medyada hakaret davaları sektöre dönüştü: Uzlaşma dönemi sona eriyor',
-      'link': 'https://t.co/tSccdEE8ia',
+      'link': 'https:',
     },
     {
       'time': '57 dakika önce',
       'title': '❄️ Meteorologlardan "Asrın kışı geliyor" 🚩 uyarısı: Arktik soğuk doğrudan Avrupa\'ya taşınabilir',
-      'link': 'https://t.co/PHrFeqblBj',
+      'link': 'https:',
     },
     {
       'time': '1 saat önce',
       'title': 'T24: Depremde hayatını kaybedenlerin anısını yaşatmak için yapılan anıt...',
-      'link': 'https://t.co/abcXYZ123',
+      'link': 'https:',
     },
   ];
 
-  // ... (Diğer state değişkenleri ve fonksiyonlar) ...
-
-  // Twitter akışındaki bir gönderiyi oluşturan Widget
   Widget _buildTweetTile(Map<String, String> tweet, Color cardColor) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
@@ -785,12 +699,11 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Sol Taraftaki T24 Logosu
                   ClipOval(
                     child: Container(
                       width: 40,
                       height: 40,
-                      color: twitterBlue, // T24/Twitter Mavi
+                      color: twitterBlue,
                       child: const Center(
                         child: Text(
                           'T24',
@@ -801,12 +714,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(width: 10),
 
-                  // Gönderi Metni ve Saati
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Kullanıcı Adı ve Saat
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.baseline,
                           textBaseline: TextBaseline.alphabetic,
@@ -816,20 +727,18 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                             Text(' @t24', style: TextStyle(color: hintTextColor, fontSize: 14)),
-                            const Spacer(), // Aradaki boşluğu doldurur
+                            const Spacer(),
                             Text(tweet['time']!, style: TextStyle(color: hintTextColor, fontSize: 14)),
                           ],
                         ),
                         const SizedBox(height: 5),
 
-                        // Gönderi Başlığı
                         Text(
                           tweet['title']!,
                           style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w400),
                         ),
                         const SizedBox(height: 5),
 
-                        // Link
                         Text(
                           tweet['link']!,
                           style: TextStyle(color: twitterBlue, fontSize: 14, decoration: TextDecoration.underline),
@@ -846,13 +755,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Twitter'a özel kategori düğmeleri (Popüler, Sana Özel)
   Widget _buildTwitterFeedCategories() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
       child: Row(
         children: [
-          // Popüler (Pasif)
           _buildCategoryButton(
             'Popüler',
             false,
@@ -861,7 +768,7 @@ class _HomeScreenState extends State<HomeScreen> {
             borderColor: hintTextColor.withOpacity(0.5),
           ),
           const SizedBox(width: 10),
-          // Sana Özel (Aktif)
+
           _buildCategoryButton(
             'Sana Özel',
             true,
@@ -871,14 +778,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(width: 16),
 
-          // Geri kalan alanı dolduran ince çizgi
           Expanded(child: Container(height: 1, color: hintTextColor.withOpacity(0.2))),
         ],
       ),
     );
   }
 
-  // Özelleştirilmiş Kategori Düğmesi
   Widget _buildCategoryButton(
     String label,
     bool isSelected, {

@@ -6,14 +6,14 @@ class LoginResponse {
 
   LoginResponse.fromJson(Map<String, dynamic> json) {
     accessToken = json['accessToken'];
-    user = json['user'] != null ? new User.fromJson(json['user']) : null;
+    user = json['user'] != null ? User.fromJson(json['user']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['accessToken'] = this.accessToken;
-    if (this.user != null) {
-      data['user'] = this.user!.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['accessToken'] = accessToken;
+    if (user != null) {
+      data['user'] = user!.toJson();
     }
     return data;
   }
@@ -35,11 +35,11 @@ class User {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['email'] = this.email;
-    data['imageUrl'] = this.imageUrl;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['email'] = email;
+    data['imageUrl'] = imageUrl;
     return data;
   }
 }

@@ -1,9 +1,9 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mytech_case/features/auth/providers.dart';
-// ViewModel yolu
+
 import 'package:flutter_mytech_case/features/auth/views/widgets/custom_input_field.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Riverpod importu
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class CreateAccountScreen extends ConsumerStatefulWidget {
@@ -18,7 +18,6 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
-  // Yeni state değişkenleri: Şifre görünürlüğü
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
@@ -57,7 +56,6 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     }
   }
 
-  // Şifre görünürlüğünü değiştiren metodlar
   void _togglePasswordVisibility() {
     setState(() {
       _isPasswordVisible = !_isPasswordVisible;
@@ -104,18 +102,15 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
   @override
   Widget build(BuildContext context) {
     ref.listen(authViewModelProvider, (previous, current) {
-      if (current.errorMessage != null && current.errorMessage != previous?.errorMessage) {
-        if (current.errorMessage!.contains('Kayıt başarılı')) {
-          _showSnackBar(current.errorMessage!, color: primaryColor);
-          // Giriş sayfasına yönlendir (Geri dönüşü sağlamak için push kullandık)
-          context.push('/login');
-          return;
-        }
+      if (current.successMessage != null && current.successMessage != previous?.successMessage) {
+        _showSnackBar(current.successMessage!, color: Colors.green);
+        context.go('/login');
+      }
 
+      if (current.errorMessage != null && current.errorMessage != previous?.errorMessage) {
         _showSnackBar(current.errorMessage!, color: errorColor);
       }
     });
-
     final authState = ref.watch(authViewModelProvider);
     final isLoading = authState.isLoading;
 
@@ -127,7 +122,6 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
           child: Center(
             child: Column(
               children: <Widget>[
-                // Başlıklar...
                 const Text(
                   'Create Your Account',
                   style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
@@ -136,7 +130,6 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                 Text('Join us to get the latest news updates.', style: TextStyle(color: hintTextColor, fontSize: 13)),
                 const SizedBox(height: 40),
 
-                // Email Alanı
                 CustomInputField(
                   label: 'Email',
                   hintText: 'you@example.com',
@@ -147,16 +140,15 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Şifre Alanı (Göz Simgesi Eklendi)
                 CustomInputField(
                   label: 'Password',
                   hintText: 'Enter your password',
                   inputFillColor: inputFillColor,
                   hintTextColor: hintTextColor,
-                  // Görünürlük durumuna göre isPassword değerini ayarlayın
+
                   isPassword: !_isPasswordVisible,
                   controller: _passwordController,
-                  // Göz simgesi düğmesi (Suffix Icon)
+
                   suffixIcon: IconButton(
                     icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off, color: hintTextColor),
                     onPressed: _togglePasswordVisibility,
@@ -164,18 +156,17 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Şifre Onay Alanı (Göz Simgesi Eklendi)
                 CustomInputField(
                   label: 'Confirm Password',
                   hintText: 'Confirm your password',
                   inputFillColor: inputFillColor,
                   hintTextColor: hintTextColor,
-                  // Görünürlük durumuna göre isPassword değerini ayarlayın
+
                   isPassword: !_isConfirmPasswordVisible,
                   hasError: _passwordsMatchError,
                   controller: _confirmPasswordController,
                   errorColor: errorColor,
-                  // Göz simgesi düğmesi (Suffix Icon)
+
                   suffixIcon: IconButton(
                     icon: Icon(
                       _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
@@ -186,7 +177,6 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                 ),
                 const SizedBox(height: 8),
 
-                // Şifre Eşleşme Hata Mesajı...
                 if (_passwordsMatchError)
                   Padding(
                     padding: const EdgeInsets.only(left: 4.0),
@@ -203,7 +193,6 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
 
                 SizedBox(height: _passwordsMatchError ? 30 : 50),
 
-                // Create Account Butonu...
                 SizedBox(
                   width: double.infinity,
                   height: 55,
@@ -229,7 +218,6 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                 ),
                 const SizedBox(height: 40),
 
-                // Hüküm ve Koşullar Metni...
                 Center(
                   child: RichText(
                     textAlign: TextAlign.center,
@@ -252,7 +240,6 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                 ),
                 const SizedBox(height: 25),
 
-                // Sign In (Giriş Yap) Linki...
                 Center(
                   child: RichText(
                     text: TextSpan(
@@ -264,7 +251,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                           style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () {
-                              context.push('/login'); // Geri dönüşü sağlamak için push kullanıldı.
+                              context.push('/login');
                             },
                         ),
                       ],
