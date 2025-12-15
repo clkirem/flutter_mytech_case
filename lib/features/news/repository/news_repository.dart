@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_mytech_case/core/di/cache_provider.dart';
 import 'package:flutter_mytech_case/core/di/core_provider.dart';
@@ -27,10 +29,10 @@ class NewsRepository {
           final List<Items> newsList = (cachedData as List)
               .map((json) => Items.fromJson(Map<String, dynamic>.from(json)))
               .toList();
-          print('CACHE: $cacheKey cache\'den yüklendi. (1 saatlik geçerlilik)');
+          log('CACHE: $cacheKey cache\'den yüklendi. (1 saatlik geçerlilik)');
           return newsList;
         } catch (e) {
-          print('CACHE OKUMA HATA: Dönüşüm hatası. API çağrılıyor. Hata: $e');
+          log('CACHE OKUMA HATA: Dönüşüm hatası. API çağrılıyor. Hata: $e');
         }
       }
     }
@@ -53,7 +55,7 @@ class NewsRepository {
         final List<Items> newsList = apiItems.map((apiItem) => apiItem).toList();
 
         await cacheManager!.setCache(cacheKey, newsList.map((e) => e.toJson()).toList());
-        print('CACHE: $cacheKey cache\'e kaydedildi. (1 saatlik geçerlilik)');
+        log('CACHE: $cacheKey cache\'e kaydedildi. (1 saatlik geçerlilik)');
 
         return newsList;
       } else {

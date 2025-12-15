@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mytech_case/core/constants.dart';
+import 'package:flutter_mytech_case/features/auth/providers.dart';
 import 'package:flutter_mytech_case/features/news/model/news_list_response.dart';
 import 'package:flutter_mytech_case/features/news/view_models/news_view_model.dart';
+import 'package:flutter_mytech_case/features/twitter/views/tweet_tile.widget.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -123,7 +125,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      ClipOval(child: Container(width: 35, height: 35, child: Image.asset('assets/haber.jpg'))),
+                      _buildProfileAvatar(ref),
                     ],
                   ),
                 ],
@@ -138,14 +140,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             SliverList(delegate: SliverChildListDelegate([_buildCategories(), const SizedBox(height: 10)])),
 
             if (_selectedCategoryIndex == PageConstants.twitterFeedIndex)
-              SliverList(delegate: SliverChildListDelegate([_buildTwitterFeedCategories()])),
-
-            if (_selectedCategoryIndex == PageConstants.twitterFeedIndex)
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  return _buildTweetTile(tweets[index], darkCardColor);
-                }, childCount: tweets.length),
-              )
+              const SliverFillRemaining(child: TwitterFeedTab())
             else
               SliverList(
                 delegate: SliverChildListDelegate([
@@ -180,6 +175,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Widget _buildProfileAvatar(WidgetRef ref) {
+    final authState = ref.watch(authViewModelProvider);
+    final String? profileImageUrl = authState.userProfile?.imageUrl;
+    ImageProvider imageProvider;
+
+    if (profileImageUrl != null && profileImageUrl.isNotEmpty) {
+      imageProvider = NetworkImage(profileImageUrl);
+    } else {
+      imageProvider = const AssetImage('assets/haber.jpg');
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: ClipOval(
+        child: SizedBox(
+          width: 35,
+          height: 35,
+          child: Image(
+            image: imageProvider,
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Center(
+                child: CircularProgressIndicator(
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                      : null,
+                  strokeWidth: 2,
+                ),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) {
+              return Image.asset('assets/haber.jpg', fit: BoxFit.cover);
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildNotificationIcon() {
     return Stack(
       children: [
@@ -191,17 +226,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Container(
             decoration: BoxDecoration(color: redAccent, borderRadius: BorderRadius.circular(6)),
             constraints: const BoxConstraints(minWidth: 8, minHeight: 8),
-
-            /*
-              child: Text(
-                '$_notificationCount',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 8,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              */
           ),
         ),
       ],
@@ -211,7 +235,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildCategories() {
     Color currentAccentColor = redAccent;
     if (_selectedCategoryIndex == PageConstants.twitterFeedIndex) {
-      currentAccentColor = twitterBlue;
+      currentAccentColor = primaryColor;
     }
 
     return Padding(
@@ -224,8 +248,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           itemBuilder: (context, index) {
             bool isSelected = index == _selectedCategoryIndex;
 
-            final Color highlightColor = isSelected && categories[index] == 'Twitter'
-                ? twitterBlue
+            final Color highlightColor = isSelected && categories[index] == PageConstants.twitterFeedIndex.toString()
+                ? primaryColor
                 : isSelected
                 ? redAccent
                 : hintTextColor;
@@ -650,146 +674,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ),
-      ),
-    );
-  }
-
-  final Color twitterBlue = const Color(0xFF1DA1F2);
-
-  final List<Map<String, String>> tweets = [
-    {'time': '37 dakika önce', 'title': 'Japonya büyük bir demans kriziyle karşı karşıya', 'link': 'https:'},
-    {
-      'time': '47 dakika önce',
-      'title': 'Sosyal medyada hakaret davaları sektöre dönüştü: Uzlaşma dönemi sona eriyor',
-      'link': 'https:',
-    },
-    {
-      'time': '57 dakika önce',
-      'title': '❄️ Meteorologlardan "Asrın kışı geliyor" 🚩 uyarısı: Arktik soğuk doğrudan Avrupa\'ya taşınabilir',
-      'link': 'https:',
-    },
-    {
-      'time': '1 saat önce',
-      'title': 'T24: Depremde hayatını kaybedenlerin anısını yaşatmak için yapılan anıt...',
-      'link': 'https:',
-    },
-  ];
-
-  Widget _buildTweetTile(Map<String, String> tweet, Color cardColor) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-      child: Card(
-        color: darkCardColor,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipOval(
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      color: twitterBlue,
-                      child: const Center(
-                        child: Text(
-                          'T24',
-                          style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: [
-                            const Text(
-                              'T24',
-                              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            Text(' @t24', style: TextStyle(color: hintTextColor, fontSize: 14)),
-                            const Spacer(),
-                            Text(tweet['time']!, style: TextStyle(color: hintTextColor, fontSize: 14)),
-                          ],
-                        ),
-                        const SizedBox(height: 5),
-
-                        Text(
-                          tweet['title']!,
-                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w400),
-                        ),
-                        const SizedBox(height: 5),
-
-                        Text(
-                          tweet['link']!,
-                          style: TextStyle(color: twitterBlue, fontSize: 14, decoration: TextDecoration.underline),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTwitterFeedCategories() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
-      child: Row(
-        children: [
-          _buildCategoryButton(
-            'Popüler',
-            false,
-            buttonColor: hintTextColor,
-            textColor: Colors.black,
-            borderColor: hintTextColor.withOpacity(0.5),
-          ),
-          const SizedBox(width: 10),
-
-          _buildCategoryButton(
-            'Sana Özel',
-            true,
-            buttonColor: darkCardColor,
-            textColor: Colors.white,
-            borderColor: Colors.transparent,
-          ),
-          const SizedBox(width: 16),
-
-          Expanded(child: Container(height: 1, color: hintTextColor.withOpacity(0.2))),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCategoryButton(
-    String label,
-    bool isSelected, {
-    required Color buttonColor,
-    required Color textColor,
-    required Color borderColor,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-      decoration: BoxDecoration(
-        color: buttonColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: borderColor, width: 1),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(color: textColor, fontSize: 14, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
       ),
     );
   }

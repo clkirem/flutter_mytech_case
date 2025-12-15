@@ -12,7 +12,37 @@ class AuthViewModel extends StateNotifier<AuthState> {
   final AuthRepository repository;
   final Ref ref;
 
-  AuthViewModel(this.repository, this.ref) : super(AuthState());
+  AuthViewModel(this.repository, this.ref) : super(AuthState()) {
+    checkAuthStatus();
+  }
+
+  Future<void> fetchUserProfile() async {
+    if (!state.isLoggedIn) return;
+
+    try {
+      final User profile = await repository.fetchUserProfile();
+
+      state = state.copyWith(userProfile: profile);
+      log("👤 Profil bilgileri başarıyla çekildi: ${profile.name}");
+    } catch (e) {
+      log("🚨 Profil çekme hatası: $e");
+      state = state.copyWith(errorMessage: "Profil yüklenemedi: $e");
+    }
+  }
+
+  Future<void> checkAuthStatus() async {
+    final tokenManager = ref.read(tokenManagerProvider);
+    final token = await tokenManager.getToken();
+
+    if (token != null) {
+      state = state.copyWith(isLoggedIn: true);
+      log("✅ Oturum doğrulandı. Token mevcut.");
+      await fetchUserProfile();
+    } else {
+      state = state.copyWith(isLoggedIn: false);
+      log("❌ Oturum doğrulanamadı. Token yok.");
+    }
+  }
 
   Future<void> login(String email, String password) async {
     try {

@@ -58,4 +58,25 @@ class AuthRepository {
       rethrow;
     }
   }
+
+  Future<User> fetchUserProfile() async {
+    try {
+      const String path = '/api/v1/users/profile';
+      final response = await api.get(path);
+
+      final apiResponse = ApiResponse<Map<String, dynamic>>.fromJson(
+        response.data,
+        (json) => json as Map<String, dynamic>,
+      );
+
+      if (apiResponse.success && apiResponse.result != null) {
+        final userProfile = User.fromJson(apiResponse.result!);
+        return userProfile;
+      } else {
+        throw Exception(apiResponse.message ?? "Profil bilgileri alınamadı.");
+      }
+    } catch (e) {
+      throw Exception("Profil bilgileri yüklenirken hata oluştu: $e");
+    }
+  }
 }
