@@ -1,9 +1,14 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_mytech_case/core/constants.dart';
 import 'package:flutter_mytech_case/features/auth/providers.dart';
+import 'package:flutter_mytech_case/features/news/model/news_category_model.dart';
 import 'package:flutter_mytech_case/features/news/model/news_list_response.dart';
 import 'package:flutter_mytech_case/features/news/view_models/news_view_model.dart';
+import 'package:flutter_mytech_case/features/news/widgets/bottom_navigation_bar.dart';
 import 'package:flutter_mytech_case/features/twitter/views/tweet_tile.widget.dart';
+import 'package:flutter_mytech_case/utils/datetime_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -31,39 +36,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedCategoryIndex = 0;
 
   final List<String> categories = const ['Son Haberler', 'Sana Özel', 'Twitter', 'YouTube'];
-  final List<NewsItem2> breakingNews = [
-    NewsItem2(
-      'Milli Gazete - Son Dakika',
-      '4  Aralık Perşembe- 1 saat önce',
-      'Türk Yargısı’ndan, Garanti Dubai’de Gayrimenkul Yatırımına İlgi',
-      const Color(0xFFD0021B),
-      imageUrl: 'assets/haber_resmi.png',
-    ),
-    NewsItem2(
-      'A Haber - Son Dakika',
-      '4  Aralık Perşembe-3 saat önce',
-      'Destekler Geliyor: Çılgın Sedat’tan yürek ısıtan paylaşım: "Sen bizim mukaddesimiz"',
-      const Color(0xFFD0021B),
-    ),
-  ];
 
-  final List<NewsItem2> agendaNews = [
-    NewsItem2(
-      'Sputnik Türkçe',
-      '4  Aralık Perşembe-2 saat önce',
-      'TBMM Başkanı Kurtulmuş: Süreç en hassas ve kırılgan döneminde',
-      const Color(0xFF4A90E2),
-    ),
-    NewsItem2(
-      'Akşam Gazetesi',
-      '4  Aralık Perşembe-1 saat önce',
-      'Yurt dışından nasıl oyuna dönebiliriz? Meğer o soruna sızmışız',
-      const Color(0xFF4A90E2),
-    ),
-  ];
   @override
   void initState() {
-    Future.microtask(() => {ref.read(newsViewModelProvider.notifier).fetchByCategory(PageConstants.latestNewsIndex)});
+    Future.microtask(() => {ref.read(newsViewModelProvider.notifier).fetchPopularNews(PageConstants.latestNewsIndex)});
+    Future.microtask(() => {ref.read(newsViewModelProvider.notifier).fetchCategorizedNews()});
     super.initState();
   }
 
@@ -71,6 +48,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     setState(() {
       _selectedIndex = index;
     });
+
+    String path = '';
+
+    switch (index) {
+      case 0:
+        path = '/news';
+        break;
+      case 1:
+        path = '/egundem';
+        break;
+      case 3:
+        path = '/saved';
+        break;
+      case 4:
+        path = '/local';
+        break;
+      default:
+        return;
+    }
+
+    if (path.isNotEmpty) {
+      context.go(path);
+    }
   }
 
   @override
@@ -82,6 +82,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         : newsState.forYouNews;
 
     final popularNews = activeList.where((e) => e.isPopular == true).toList();
+
+    final List<NewsCategoryModel> categorizedNews = newsState.groupedNews;
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -155,15 +157,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  ..._buildCategorizedNewsSections(categorizedNews),
 
-                  _buildSectionHeader('Son Dakika', redAccent),
-                  ...breakingNews.map((news) => _buildBreakingNewsTile(news, darkCardColor, redAccent)).toList(),
-                  _buildShowMoreButton(redAccent),
-                  const SizedBox(height: 20),
-
-                  _buildSectionHeader('Gündem', Colors.blue),
-                  ...agendaNews.map((news) => _buildAgendaNewsTile(news, darkCardColor)).toList(),
-                  _buildShowMoreButton(primaryColor),
                   const SizedBox(height: 50),
                 ]),
               ),
@@ -171,7 +166,141 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
 
-      bottomNavigationBar: _buildBottomNavBar(navBarColor, primaryColor),
+      bottomNavigationBar: CustomBottomNavBar(selectedIndex: _selectedIndex, onItemTapped: _onItemTapped),
+    );
+  }
+
+  List<Widget> _buildCategorizedNewsSections(List<NewsCategoryModel> groupedNews) {
+    List<Widget> sections = [];
+
+    for (var group in groupedNews) {
+      sections.add(
+        _buildSectionHeader(
+          group.categoryName ?? "",
+          group.items != null && group.items!.isNotEmpty
+              ? (group.items!.first.colorCode != null
+                    ? Color(int.parse('0xFF${group.items!.first.colorCode!.replaceFirst('#', '')}'))
+                    : redAccent)
+              : redAccent,
+        ),
+      );
+
+      sections.addAll(
+        group.items!.map((newsItem) {
+          return _buildNewsTileFromViewModelItem(newsItem);
+        }).toList(),
+      );
+
+      sections.add(
+        _buildShowMoreButton(
+          group.items!.first.colorCode != null
+              ? Color(int.parse('0xFF${group.items!.first.colorCode!.replaceFirst('#', '')}'))
+              : redAccent,
+          categoryId: group.items!.first.categoryId,
+        ),
+      );
+
+      sections.add(const SizedBox(height: 20));
+    }
+
+    return sections;
+  }
+
+  Widget _buildNewsTileFromViewModelItem(Items newsItem) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: darkCardColor, borderRadius: BorderRadius.circular(10)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                ClipOval(
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    color: Colors.white,
+                    child: Image.network(
+                      newsItem.sourceProfilePictureUrl ?? 'https://via.placeholder.com/100x100.png?text=No+Image',
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        newsItem.sourceName ?? newsItem.sourceTitle ?? '',
+                        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+                      ),
+                      Text(
+                        DateTimeHelper.formatPublishedAt(newsItem.publishedAt),
+                        style: TextStyle(color: hintTextColor, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+
+                GestureDetector(
+                  onTap: () {
+                    ref.read(newsViewModelProvider.notifier).saveNews(newsItem.id!);
+                  },
+                  child: Icon(
+                    newsItem.isSaved ?? false ? Icons.bookmark : Icons.bookmark_border,
+                    color: redAccent,
+                    size: 20,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    newsItem.title ?? '',
+                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 15),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShowMoreButton(Color backgroundColor, {String? categoryId}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
+      child: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            context.go('/categorynews/${categoryId ?? 'all'}');
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: backgroundColor,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25.0)),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          ),
+          child: const Text(
+            'Daha Fazla Göster',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ),
     );
   }
 
@@ -260,7 +389,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   _selectedCategoryIndex = index;
                 });
 
-                ref.read(newsViewModelProvider.notifier).fetchByCategory(index);
+                ref.read(newsViewModelProvider.notifier).fetchPopularNews(index);
               },
 
               child: Padding(
@@ -301,42 +430,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildBottomNavBar(Color navBarColor, Color primaryColor) {
-    return Container(
-      decoration: BoxDecoration(
-        color: navBarColor,
-        border: Border(top: BorderSide(color: hintTextColor.withOpacity(0.1), width: 1)),
-      ),
-      child: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: redAccent,
-        unselectedItemColor: hintTextColor,
-        showUnselectedLabels: true,
-        selectedLabelStyle: TextStyle(fontSize: 10, color: redAccent),
-        unselectedLabelStyle: TextStyle(fontSize: 10, color: hintTextColor),
-
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(LucideIcons.newspaper, size: 24), label: 'Anasayfa'),
-          BottomNavigationBarItem(icon: Icon(LucideIcons.compass, size: 24), label: 'e-gündem'),
-          BottomNavigationBarItem(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(shape: BoxShape.circle, color: redAccent),
-              child: const Icon(Icons.alarm, color: Colors.white, size: 28),
-            ),
-            label: '',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.bookmark_border, size: 24), label: 'Kaydedilenler'),
-          BottomNavigationBarItem(icon: Icon(Icons.location_on_outlined, size: 24), label: 'Yerel'),
-        ],
-      ),
-    );
-  }
-
   Widget _buildPopularNewsCarousel(BuildContext context, List<Items> popularNews) {
     if (popularNews.isEmpty) {
       return const SizedBox.shrink();
@@ -354,10 +447,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               itemBuilder: (context, index) {
                 final news = popularNews[index];
                 return _buildCarouselItem(
+                  isSaved: news.isSaved ?? false,
+                  newsId: news.id ?? '',
                   title: news.title ?? '',
                   sourceName: news.sourceName ?? news.sourceTitle ?? '',
                   sourceColor: news.colorCode != null
-                      ? Color(int.parse('0xFF' + news.colorCode!.replaceFirst('#', '')))
+                      ? Color(int.parse('0xFF${news.colorCode!.replaceFirst('#', '')}'))
                       : Colors.red,
                   imageUrl: news.imageUrl ?? 'https://via.placeholder.com/400x200.png?text=No+Image',
                   categoryName: news.categoryName ?? '',
@@ -379,6 +474,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     required String categoryName,
     required String imageUrl,
     required String sourceProfilePictureUrl,
+    required String newsId,
+    required bool isSaved,
   }) {
     return Stack(
       children: [
@@ -417,7 +514,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         color: redAccent.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(LucideIcons.bookmark, color: redAccent, size: 20),
+                      child: GestureDetector(
+                        onTap: () {
+                          ref.read(newsViewModelProvider.notifier).saveNews(newsId);
+                        },
+                        child: Icon(isSaved ? Icons.bookmark : Icons.bookmark_border, color: redAccent, size: 20),
+                      ),
                     ),
                   ),
                 ],
@@ -492,7 +594,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: [
           Row(
             children: [
-              Container(width: 4, height: 18, color: accentColor, margin: const EdgeInsets.only(right: 8)),
+              Container(
+                width: 4,
+                height: 18,
+                decoration: BoxDecoration(color: accentColor, borderRadius: BorderRadius.circular(8)),
+                margin: const EdgeInsets.only(right: 8),
+              ),
               Text(
                 title,
                 style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
@@ -501,179 +608,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           Text('Daha Fazla Göster', style: TextStyle(color: hintTextColor, fontSize: 14)),
         ],
-      ),
-    );
-  }
-
-  Widget _buildBreakingNewsTile(NewsItem2 news, Color cardColor, Color sourceColor) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(10)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                ClipOval(
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    color: Colors.white,
-                    child: Center(
-                      child: Text(
-                        news.source.substring(0, 1),
-                        style: TextStyle(color: darkCardColor, fontSize: 14, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        news.source,
-                        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
-                      ),
-                      Text(news.time, style: TextStyle(color: hintTextColor, fontSize: 12)),
-                    ],
-                  ),
-                ),
-
-                Icon(LucideIcons.bookmark, color: redAccent, size: 20),
-              ],
-            ),
-
-            const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    news.title,
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 15),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAgendaNewsTile(NewsItem2 news, Color cardColor) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(10)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                ClipOval(
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    color: Colors.white,
-                    child: Center(
-                      child: Text(
-                        news.source.substring(0, 1),
-                        style: TextStyle(color: darkCardColor, fontSize: 14, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        news.source,
-                        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
-                      ),
-                      Text(news.time, style: TextStyle(color: hintTextColor, fontSize: 12)),
-                    ],
-                  ),
-                ),
-
-                Icon(LucideIcons.bookmark, color: redAccent, size: 20),
-              ],
-            ),
-
-            const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    news.title,
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 15),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionRow(Color accentColor) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _buildActionButton(Icons.link, 'Anasayfa'),
-        _buildActionButton(Icons.history, 'Gündem'),
-        _buildActionButton(Icons.thumb_up_alt_outlined, '0 Beğeni', isRed: true, accentColor: accentColor),
-        _buildActionButton(Icons.share_outlined, 'Kopyala/Paylaş'),
-        _buildActionButton(Icons.more_horiz, 'Yarat'),
-      ],
-    );
-  }
-
-  Widget _buildActionButton(IconData icon, String label, {bool isRed = false, Color? accentColor}) {
-    return Column(
-      children: [
-        Icon(icon, color: isRed ? accentColor : hintTextColor, size: 20),
-        const SizedBox(height: 4),
-        Text(label, style: TextStyle(color: hintTextColor, fontSize: 10)),
-      ],
-    );
-  }
-
-  Widget _buildShowMoreButton(Color backgroundColor) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
-      child: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            context.go('/category');
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: backgroundColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25.0)),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          ),
-          child: const Text(
-            'Daha Fazla Göster',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-        ),
       ),
     );
   }

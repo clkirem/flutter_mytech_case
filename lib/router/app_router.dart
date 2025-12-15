@@ -14,7 +14,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login', name: 'login', builder: (context, state) => const SignInScreen()),
       GoRoute(path: '/newssource', name: 'newssource', builder: (context, state) => const SelectNewsSourcesScreen()),
       GoRoute(path: '/home', name: 'home', builder: (context, state) => HomeScreen()),
-      GoRoute(path: '/category', name: 'category', builder: (context, state) => CategoryNewsScreen()),
+      GoRoute(
+        path: '/categorynews/:categoryid',
+        name: 'categorynews',
+        builder: (context, state) => CategoryNewsScreen(categoryId: state.pathParameters['categoryid'].toString()),
+      ),
     ],
   );
 });

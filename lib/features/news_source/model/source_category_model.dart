@@ -13,7 +13,7 @@ class SourceCategoryModel {
     if (json['sources'] != null) {
       sources = <Sources>[];
       json['sources'].forEach((v) {
-        sources!.add(new Sources.fromJson(v));
+        sources!.add(Sources.fromJson(v));
       });
     }
   }

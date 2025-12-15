@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_mytech_case/core/di/cache_provider.dart';
 import 'package:flutter_mytech_case/router/app_router.dart';
 import 'package:flutter_mytech_case/utils/cache_manager.dart';
@@ -30,6 +31,13 @@ class MyApp extends ConsumerWidget {
       builder: (context, child) {
         return Container(color: Colors.black, child: child);
       },
+      supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],
+      locale: const Locale('tr', 'TR'),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       theme: ThemeData(
         useSystemColors: false,
         canvasColor: Colors.white,

@@ -68,6 +68,25 @@ class NewsRepository {
       throw Exception("Haberler yüklenemedi: $e");
     }
   }
+
+  Future<Map<String, dynamic>?> saveNew(Map<String, dynamic> data) async {
+    try {
+      const String path = '/api/v1/saved-news';
+
+      final response = await api.post(path, data: data);
+
+      if (response.statusCode == 201 && response.data != null) {
+        return response.data;
+      }
+
+      throw Exception('Haber kaydetme başarısız oldu. Hata Kodu: ${response.statusCode}');
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.message;
+      throw Exception(errorMessage);
+    } catch (e) {
+      throw Exception("Haberler yüklenemedi: $e");
+    }
+  }
 }
 
 final newsRepositoryProvider = Provider((ref) {

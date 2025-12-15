@@ -13,7 +13,8 @@ class NewsItem {
 }
 
 class CategoryNewsScreen extends StatefulWidget {
-  const CategoryNewsScreen({super.key});
+  String categoryId;
+  CategoryNewsScreen({super.key, required this.categoryId});
 
   @override
   State<CategoryNewsScreen> createState() => _CategoryNewsScreenState();

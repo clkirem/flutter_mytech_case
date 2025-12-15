@@ -82,6 +82,16 @@ class Items {
     );
   }
 
+  Items copyWith({String? id, String? title, String? categoryId, String? categoryName, bool? isSaved}) {
+    return Items(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      categoryId: categoryId ?? this.categoryId,
+      categoryName: categoryName ?? this.categoryName,
+      isSaved: isSaved ?? this.isSaved,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;

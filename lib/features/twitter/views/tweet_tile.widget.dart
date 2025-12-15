@@ -178,6 +178,8 @@ class _TwitterFeedTabState extends ConsumerState<TwitterFeedTab> {
 
                         Text(
                           tweet.content ?? "",
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w400),
                         ),
                         const SizedBox(height: 5),
