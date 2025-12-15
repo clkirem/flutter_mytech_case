@@ -15,3 +15,5 @@ final Color darkCardColor = const Color(0xFF222222);
 final Color hintTextColor = const Color(0xFF555D6B);
 final Color redAccent = Colors.red;
 final Color navBarColor = const Color(0xFF151515);
+final Color labelTextColor = const Color(0xFFE0E0E0);
+final Color inputFillColor = const Color(0xFF18212D);

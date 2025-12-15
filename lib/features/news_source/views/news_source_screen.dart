@@ -1,67 +1,50 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mytech_case/features/news_source/view_model/source_view_model.dart';
+import 'package:flutter_mytech_case/utils/debouncer.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_mytech_case/core/constants.dart';
 
-class NewsSource {
-  final String title;
-  final String category;
-  final Color color;
-
-  NewsSource(this.title, this.category, this.color);
-}
-
-class SelectNewsSourcesScreen extends StatefulWidget {
+class SelectNewsSourcesScreen extends ConsumerStatefulWidget {
   const SelectNewsSourcesScreen({super.key});
 
   @override
-  State<SelectNewsSourcesScreen> createState() => _SelectNewsSourcesScreenState();
+  ConsumerState<SelectNewsSourcesScreen> createState() => _SelectNewsSourcesScreenState();
 }
 
-class _SelectNewsSourcesScreenState extends State<SelectNewsSourcesScreen> {
-  final Color primaryColor = Colors.blue;
-  final Color backgroundColor = Color(0xFF101922);
-  final Color inputFillColor = Color(0xFF18212D);
-  final Color hintTextColor = Color(0xFF555D6B);
-  final Color labelTextColor = const Color(0xFFE0E0E0);
-
-  final List<NewsSource> _allSources = [
-    NewsSource('TechCrunch', 'TECHNOLOGY', const Color(0xFF5CB85C)),
-    NewsSource('The Verge', 'TECHNOLOGY', const Color(0xFF4A90E2)),
-    NewsSource('WIRED', 'TECHNOLOGY', const Color(0xFF999999)),
-    NewsSource('BBC News', 'WORLD NEWS', const Color(0xFFD0021B)),
-    NewsSource('Reuters', 'WORLD NEWS', const Color(0xFF00589C)),
-    NewsSource('ESPN', 'SPORTS', const Color(0xFFCC3333)),
-  ];
-
-  late Map<String, bool> _selectedSources;
+class _SelectNewsSourcesScreenState extends ConsumerState<SelectNewsSourcesScreen> {
+  late final Debouncer _debouncer;
+  late final TextEditingController _searchController;
 
   @override
   void initState() {
     super.initState();
-    _selectedSources = {
-      for (var source in _allSources) source.title: true,
-      'The Verge': false,
-      'BBC News': false,
-      'ESPN': false,
-    };
+
+    _debouncer = Debouncer(delay: const Duration(milliseconds: 500));
+    _searchController = TextEditingController();
   }
 
-  void _toggleSourceSelection(String title, bool newValue) {
-    setState(() {
-      _selectedSources[title] = newValue;
+  @override
+  void dispose() {
+    _debouncer.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _handleSearch(String query) {
+    _debouncer.call(() {
+      ref.read(sourceListProvider.notifier).performSearch(query);
     });
-    print('$title durumu $newValue olarak güncellendi.');
+  }
+
+  void _toggleSourceSelection(String sourceId, bool newValue) {
+    ref.read(sourceListProvider.notifier).toggleFollowSource(sourceId, newValue);
   }
 
   @override
   Widget build(BuildContext context) {
-    final Map<String, List<NewsSource>> groupedSources = {};
-    for (var source in _allSources) {
-      if (!groupedSources.containsKey(source.category)) {
-        groupedSources[source.category] = [];
-      }
-      groupedSources[source.category]!.add(source);
-    }
+    final sourceCategoryListAsyncValue = ref.watch(sourceListProvider);
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -85,41 +68,66 @@ class _SelectNewsSourcesScreenState extends State<SelectNewsSourcesScreen> {
           const SizedBox(width: 8),
         ],
       ),
-
       body: Stack(
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: ListView(
-              padding: const EdgeInsets.only(top: 10, bottom: 100),
-              children: <Widget>[
-                _buildSearchBar(inputFillColor: inputFillColor, hintTextColor: hintTextColor),
-                const SizedBox(height: 20),
+            child: sourceCategoryListAsyncValue.when(
+              loading: () => Center(child: CircularProgressIndicator(color: primaryColor)),
+              error: (err, stack) => Center(
+                child: Text('Hata oluştu: ${err.toString()}', style: const TextStyle(color: Colors.red)),
+              ),
+              data: (categoryList) {
+                return Column(
+                  children: [
+                    _buildSearchBar(
+                      inputFillColor: inputFillColor,
+                      hintTextColor: hintTextColor,
+                      onSearch: _handleSearch,
+                      controller: _searchController,
+                    ),
+                    const SizedBox(height: 10),
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.only(top: 10, bottom: 100),
+                        children: <Widget>[
+                          ...categoryList.map((category) {
+                            final categoryTitle = category.sourceCategoryTitle ?? '';
+                            final sources = category.sources ?? [];
 
-                ...groupedSources.keys.map((category) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildCategoryHeader(category, labelTextColor),
-                      const SizedBox(height: 5),
-                      ...groupedSources[category]!.map((source) {
-                        return _buildSourceTile(
-                          source.title,
-                          source.color,
-                          _selectedSources[source.title]!,
-                          hintTextColor,
-                          primaryColor,
-                          _toggleSourceSelection,
-                        );
-                      }).toList(),
-                      const SizedBox(height: 10),
-                    ],
-                  );
-                }).toList(),
-              ],
+                            if (sources.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildCategoryHeader(categoryTitle, labelTextColor),
+                                const SizedBox(height: 5),
+                                ...sources.map((source) {
+                                  return _buildSourceTile(
+                                    source.id ?? '',
+                                    source.name ?? '',
+                                    source.imageUrl ?? '',
+                                    source.isFollowed ?? false,
+                                    hintTextColor,
+                                    primaryColor,
+                                    _toggleSourceSelection,
+                                  );
+                                }),
+                                const SizedBox(height: 10),
+                              ],
+                            );
+                          }),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
-
           Align(
             alignment: Alignment.bottomCenter,
             child: _buildSaveButton(primaryColor: primaryColor),
@@ -129,10 +137,17 @@ class _SelectNewsSourcesScreenState extends State<SelectNewsSourcesScreen> {
     );
   }
 
-  Widget _buildSearchBar({required Color inputFillColor, required Color hintTextColor}) {
+  Widget _buildSearchBar({
+    required Color inputFillColor,
+    required Color hintTextColor,
+    required Function(String) onSearch,
+    required TextEditingController controller,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: TextFormField(
+        controller: _searchController,
+        onChanged: onSearch,
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
           hintText: 'Search for a source...',
@@ -156,16 +171,17 @@ class _SelectNewsSourcesScreenState extends State<SelectNewsSourcesScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: 15.0, bottom: 8.0),
       child: Text(
-        title,
+        title.toUpperCase(),
         style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.bold),
       ),
     );
   }
 
   Widget _buildSourceTile(
+    String sourceId,
     String title,
-    Color avatarColor,
-    bool isSelected,
+    String imageUrl,
+    bool isFollowed,
     Color hintTextColor,
     Color primaryColor,
     Function(String, bool) onToggle,
@@ -175,19 +191,20 @@ class _SelectNewsSourcesScreenState extends State<SelectNewsSourcesScreen> {
       leading: Container(
         width: 40,
         height: 40,
-        decoration: BoxDecoration(color: avatarColor, borderRadius: BorderRadius.circular(8)),
-        child: Center(
-          child: Text(
-            title.substring(0, 1),
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          image: DecorationImage(
+            fit: BoxFit.cover,
+            // Hata durumunda (404/boş URL) placeholder göstermek için try-catch ekleyebilirsiniz.
+            image: NetworkImage(imageUrl),
           ),
         ),
       ),
       title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16)),
       trailing: CupertinoSwitch(
-        value: isSelected,
+        value: isFollowed,
         onChanged: (bool newValue) {
-          onToggle(title, newValue);
+          onToggle(sourceId, newValue);
         },
         activeColor: primaryColor,
         inactiveThumbColor: hintTextColor,
@@ -198,16 +215,33 @@ class _SelectNewsSourcesScreenState extends State<SelectNewsSourcesScreen> {
   }
 
   Widget _buildSaveButton({required Color primaryColor}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 50.0),
-
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 30.0),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        boxShadow: [
+          BoxShadow(
+            color: backgroundColor.withOpacity(0.9),
+            blurRadius: 10,
+            spreadRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
       child: SizedBox(
         width: double.infinity,
         height: 55,
         child: ElevatedButton(
-          onPressed: () {
-            print('Seçilen Kaynaklar: ${_selectedSources.entries.where((e) => e.value).map((e) => e.key).toList()}');
-            context.go('/home');
+          onPressed: () async {
+            try {
+              await ref.read(sourceListProvider.notifier).saveFollowedSources();
+              context.go('/home');
+            } catch (e) {
+              print('Kaydetme başarısız: $e');
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Kaydetme başarısız oldu: ${e.toString()}')));
+            }
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: primaryColor,

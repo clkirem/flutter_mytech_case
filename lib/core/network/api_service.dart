@@ -5,7 +5,7 @@ class ApiService {
 
   ApiService(this.dio);
 
-  Future<Response> post(String path, {Map<String, dynamic>? data}) {
+  Future<Response> post(String path, {dynamic data, Map<String, dynamic>? queryParameters}) {
     return dio.post(path, data: data);
   }
 
