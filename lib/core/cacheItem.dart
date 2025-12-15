@@ -1,14 +1,14 @@
 class CacheItem {
-  final dynamic data;
-  final DateTime createdAt;
+  final dynamic value;
+  final DateTime timestamp;
 
-  CacheItem({required this.data, required this.createdAt});
+  CacheItem({required this.value, required this.timestamp});
 
   Map<String, dynamic> toMap() {
-    return {'data': data, 'createdAt': createdAt.millisecondsSinceEpoch};
+    return {'value': value, 'timestamp': timestamp.millisecondsSinceEpoch};
   }
 
   static CacheItem fromMap(Map map) {
-    return CacheItem(data: map['data'], createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt']));
+    return CacheItem(value: map['value'], timestamp: DateTime.fromMillisecondsSinceEpoch(map['timestamp']));
   }
 }

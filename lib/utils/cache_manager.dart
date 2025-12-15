@@ -12,7 +12,7 @@ class CacheManager {
   }
 
   Future<void> setCache(String key, dynamic data) async {
-    final item = CacheItem(data: data, createdAt: DateTime.now());
+    final item = CacheItem(value: data, timestamp: DateTime.now());
     await _box.put(key, item.toMap());
   }
 
@@ -24,13 +24,13 @@ class CacheManager {
     final item = CacheItem.fromMap(Map<String, dynamic>.from(map));
 
     final now = DateTime.now();
-    final diff = now.difference(item.createdAt);
+    final diff = now.difference(item.timestamp);
 
     if (diff.inHours >= 1) {
       await _box.delete(key);
       return null;
     }
 
-    return item.data;
+    return item.value;
   }
 }
