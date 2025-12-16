@@ -70,10 +70,7 @@ class SourceRepository {
       if (response.statusCode != 200) {
         throw Exception('Takip durumunu kaydetme başarısız oldu. Hata Kodu: ${response.statusCode}');
       }
-
-      print("Takip durumu başarıyla kaydedildi.");
     } catch (e) {
-      print("syncFollowState HATA: $e");
       rethrow;
     }
   }

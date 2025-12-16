@@ -16,7 +16,7 @@ class TweetListResponse {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     if (items != null) {
-      data['items'] = items!.map((v) => v.toJson()).toList();
+      data['items'] = items.map((v) => v.toJson()).toList();
     }
     data['total'] = total;
     data['page'] = page;

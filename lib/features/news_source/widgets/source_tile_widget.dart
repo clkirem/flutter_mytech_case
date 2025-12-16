@@ -40,10 +40,10 @@ class SourceTileWidget extends StatelessWidget {
         onChanged: (bool newValue) {
           onToggle(sourceId, newValue);
         },
-        activeColor: primaryColor,
+        activeTrackColor: primaryColor,
         inactiveThumbColor: hintTextColor,
         inactiveTrackColor: inputFillColor,
-        trackOutlineColor: MaterialStateProperty.all(Colors.transparent),
+        trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
       ),
     );
   }

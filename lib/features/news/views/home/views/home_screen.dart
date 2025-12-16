@@ -501,7 +501,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           GestureDetector(
             onTap: () {
-              context.push('/categorynews/${categoryId ?? ''}');
+              context.push('/categorynews/$categoryId');
             },
             child: Text('Daha Fazla Göster', style: TextStyle(color: hintTextColor, fontSize: 14)),
           ),

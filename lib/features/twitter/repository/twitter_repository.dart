@@ -6,7 +6,7 @@ import 'package:flutter_mytech_case/core/network/api_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../model/tweet_list_response.dart';
 
-const int PAGE_SIZE_TWITTER = 10;
+const int pageSizeTwitter = 10;
 
 class TwitterRepository {
   final ApiService api;
@@ -19,7 +19,7 @@ class TwitterRepository {
 
       final response = await api.get(
         path,
-        queryParameters: {'page': page, 'isPopular': isPopular, 'pageSize': PAGE_SIZE_TWITTER},
+        queryParameters: {'page': page, 'isPopular': isPopular, 'pageSize': pageSizeTwitter},
       );
 
       final apiResponse = ApiResponse<Map<String, dynamic>>.fromJson(

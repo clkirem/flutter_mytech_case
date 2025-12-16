@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:flutter_mytech_case/core/di/cache_provider.dart';
 import 'package:flutter_mytech_case/core/di/core_provider.dart';
-import 'package:flutter_mytech_case/features/category_news/model/category_response.dart';
 import 'package:flutter_mytech_case/features/news/model/news_by_category_response.dart';
 import 'package:flutter_mytech_case/features/news/model/news_list_response.dart';
 import 'package:flutter_mytech_case/utils/cache_manager.dart';
