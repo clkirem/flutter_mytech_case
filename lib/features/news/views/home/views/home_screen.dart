@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_mytech_case/core/constants.dart';
 import 'package:flutter_mytech_case/features/auth/providers.dart';
@@ -7,21 +5,12 @@ import 'package:flutter_mytech_case/features/news/model/news_category_model.dart
 import 'package:flutter_mytech_case/features/news/model/news_list_response.dart';
 import 'package:flutter_mytech_case/features/news/view_models/news_view_model.dart';
 import 'package:flutter_mytech_case/features/news/widgets/bottom_navigation_bar.dart';
+import 'package:flutter_mytech_case/features/news/widgets/carousel_item_widget.dart';
 import 'package:flutter_mytech_case/features/twitter/views/tweet_tile.widget.dart';
 import 'package:flutter_mytech_case/utils/datetime_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-
-class NewsItem2 {
-  final String source;
-  final String time;
-  final String title;
-  final String? imageUrl;
-  final Color sourceColor;
-
-  NewsItem2(this.source, this.time, this.title, this.sourceColor, {this.imageUrl});
-}
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -90,54 +79,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: SafeArea(
         child: CustomScrollView(
           slivers: <Widget>[
-            SliverAppBar(
-              backgroundColor: backgroundColor,
-              floating: true,
-              pinned: true,
-              snap: true,
-              elevation: 0,
-              toolbarHeight: 56,
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(LucideIcons.menu, color: Colors.white),
-                      const SizedBox(width: 20),
-                      const Icon(LucideIcons.alarmClock, color: Colors.white),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      ClipOval(
-                        child: Container(
-                          width: 35,
-                          height: 35,
-                          decoration: BoxDecoration(color: darkCardColor, borderRadius: BorderRadius.circular(17.5)),
-                          child: const Icon(LucideIcons.search, color: Colors.white, size: 15),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      ClipOval(
-                        child: Container(
-                          width: 35,
-                          height: 35,
-                          decoration: BoxDecoration(color: darkCardColor, borderRadius: BorderRadius.circular(17.5)),
-                          child: _buildNotificationIcon(),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      _buildProfileAvatar(ref),
-                    ],
-                  ),
-                ],
-              ),
-
-              bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(1.0),
-                child: Container(height: 1.0, color: hintTextColor.withOpacity(0.2)),
-              ),
-            ),
+            buildAppBar(),
 
             SliverList(delegate: SliverChildListDelegate([_buildCategories(), const SizedBox(height: 10)])),
 
@@ -170,6 +112,57 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Widget buildAppBar() {
+    return SliverAppBar(
+      backgroundColor: backgroundColor,
+      floating: true,
+      pinned: true,
+      snap: true,
+      elevation: 0,
+      toolbarHeight: 56,
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              const Icon(LucideIcons.menu, color: Colors.white),
+              const SizedBox(width: 20),
+              const Icon(LucideIcons.alarmClock, color: Colors.white),
+            ],
+          ),
+          Row(
+            children: [
+              ClipOval(
+                child: Container(
+                  width: 35,
+                  height: 35,
+                  decoration: BoxDecoration(color: darkCardColor, borderRadius: BorderRadius.circular(17.5)),
+                  child: const Icon(LucideIcons.search, color: Colors.white, size: 15),
+                ),
+              ),
+              const SizedBox(width: 10),
+              ClipOval(
+                child: Container(
+                  width: 35,
+                  height: 35,
+                  decoration: BoxDecoration(color: darkCardColor, borderRadius: BorderRadius.circular(17.5)),
+                  child: _buildNotificationIcon(),
+                ),
+              ),
+              const SizedBox(width: 10),
+              _buildProfileAvatar(ref),
+            ],
+          ),
+        ],
+      ),
+
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1.0),
+        child: Container(height: 1.0, color: hintTextColor.withOpacity(0.2)),
+      ),
+    );
+  }
+
   List<Widget> _buildCategorizedNewsSections(List<NewsCategoryModel> groupedNews) {
     List<Widget> sections = [];
 
@@ -182,6 +175,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ? Color(int.parse('0xFF${group.items!.first.colorCode!.replaceFirst('#', '')}'))
                     : redAccent)
               : redAccent,
+          group.categoryId ?? "",
         ),
       );
 
@@ -439,132 +433,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
         children: [
-          Container(
+          SizedBox(
             height: 250,
             child: PageView.builder(
               itemCount: popularNews.length,
               onPageChanged: (index) => setState(() => _currentPage = index),
               itemBuilder: (context, index) {
                 final news = popularNews[index];
-                return _buildCarouselItem(
-                  isSaved: news.isSaved ?? false,
-                  newsId: news.id ?? '',
+                return CarouselItemWidget(
+                  ref: ref,
                   title: news.title ?? '',
-                  sourceName: news.sourceName ?? news.sourceTitle ?? '',
+                  sourceName: news.sourceName ?? '',
+                  isSaved: news.isSaved ?? false,
+                  categoryName: news.categoryName ?? '',
                   sourceColor: news.colorCode != null
                       ? Color(int.parse('0xFF${news.colorCode!.replaceFirst('#', '')}'))
                       : Colors.red,
-                  imageUrl: news.imageUrl ?? 'https://via.placeholder.com/400x200.png?text=No+Image',
-                  categoryName: news.categoryName ?? '',
-                  sourceProfilePictureUrl:
-                      news.sourceProfilePictureUrl ?? 'https://via.placeholder.com/100x100.png?text=No+Image',
+                  sourceProfilePictureUrl: news.imageUrl ?? 'https://via.placeholder.com/400x200.png?text=No+Image',
+                  newsId: news.categoryName ?? '',
+                  imageUrl: news.sourceProfilePictureUrl ?? 'https://via.placeholder.com/100x100.png?text=No+Image',
                 );
               },
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildCarouselItem({
-    required String title,
-    required String sourceName,
-    required Color sourceColor,
-    required String categoryName,
-    required String imageUrl,
-    required String sourceProfilePictureUrl,
-    required String newsId,
-    required bool isSaved,
-  }) {
-    return Stack(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            image: DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover),
-          ),
-        ),
-
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: sourceColor, borderRadius: BorderRadius.circular(15)),
-                    child: Text(
-                      categoryName,
-                      style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-
-                  ClipOval(
-                    child: Container(
-                      height: 35,
-                      width: 35,
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: redAccent.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: GestureDetector(
-                        onTap: () {
-                          ref.read(newsViewModelProvider.notifier).saveNews(newsId);
-                        },
-                        child: Icon(isSaved ? Icons.bookmark : Icons.bookmark_border, color: redAccent, size: 20),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      shadows: [Shadow(blurRadius: 5.0, color: Colors.black)],
-                    ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-
-                  Row(
-                    children: [
-                      ClipOval(
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          color: Colors.white,
-                          child: Center(child: Image.network(sourceProfilePictureUrl)),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-
-                      Text(
-                        sourceName,
-                        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 
@@ -586,7 +479,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title, Color accentColor) {
+  Widget _buildSectionHeader(String title, Color accentColor, String categoryId) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
       child: Row(
@@ -606,7 +499,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ],
           ),
-          Text('Daha Fazla Göster', style: TextStyle(color: hintTextColor, fontSize: 14)),
+          GestureDetector(
+            onTap: () {
+              context.push('/categorynews/${categoryId ?? ''}');
+            },
+            child: Text('Daha Fazla Göster', style: TextStyle(color: hintTextColor, fontSize: 14)),
+          ),
         ],
       ),
     );

@@ -10,16 +10,6 @@ import 'package:go_router/go_router.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-class NewsItem {
-  final String source;
-  final String time;
-  final String title;
-  final String? imageUrl;
-  final Color sourceColor;
-
-  NewsItem(this.source, this.time, this.title, this.sourceColor, {this.imageUrl});
-}
-
 class CategoryNewsScreen extends ConsumerStatefulWidget {
   String categoryId;
   CategoryNewsScreen({super.key, required this.categoryId});
@@ -30,19 +20,22 @@ class CategoryNewsScreen extends ConsumerStatefulWidget {
 
 class _CategoryNewsScreenState extends ConsumerState<CategoryNewsScreen> {
   late final categoryVmProvider = categoryNewsViewModelProvider(widget.categoryId);
+  late String activeCategoryId;
 
   @override
   void initState() {
+    activeCategoryId = widget.categoryId;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(categoryListViewModelProvider.notifier).fetchCategories();
-      ref.read(categoryVmProvider.notifier);
     });
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    final pagingController = ref.read(categoryVmProvider.notifier).pagingController;
+    final currentVmProvider = categoryNewsViewModelProvider(activeCategoryId);
+    final categoryViewModel = ref.watch(currentVmProvider.notifier);
+    final pagingController = categoryViewModel.pagingController;
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -170,38 +163,12 @@ class _CategoryNewsScreenState extends ConsumerState<CategoryNewsScreen> {
 
   Widget _buildCategoryButtons() {
     final categoryListState = ref.watch(categoryListViewModelProvider);
-    final categoryViewModel = ref.read(categoryVmProvider.notifier);
 
     if (categoryListState.isLoading && categoryListState.categories.isEmpty) {
-      return SizedBox(
-        height: 100,
-        child: Center(child: CircularProgressIndicator(color: redAccent)),
-      );
-    }
-
-    if (categoryListState.errorMessage != null) {
-      return SizedBox(
-        height: 100,
-        child: Center(
-          child: Text(
-            'Kategoriler yüklenemedi: ${categoryListState.errorMessage}',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: redAccent),
-          ),
-        ),
-      );
+      return SizedBox();
     }
 
     final List<CategoryResponse> categories = categoryListState.categories;
-
-    if (categories.isEmpty) {
-      return SizedBox(
-        height: 100,
-        child: Center(
-          child: Text('Kategori bulunamadı.', style: TextStyle(color: hintTextColor)),
-        ),
-      );
-    }
 
     return SizedBox(
       height: 100,
@@ -210,7 +177,7 @@ class _CategoryNewsScreenState extends ConsumerState<CategoryNewsScreen> {
         itemCount: categories.length,
         itemBuilder: (context, index) {
           final category = categories[index];
-          final bool isSelected = category.id == categoryViewModel.currentCategoryId;
+          final bool isSelected = category.id == activeCategoryId;
 
           final Color categoryColor = category.colorCode != null
               ? Color(int.parse('0xFF${category.colorCode!.replaceFirst('#', '')}'))
@@ -220,8 +187,10 @@ class _CategoryNewsScreenState extends ConsumerState<CategoryNewsScreen> {
             padding: const EdgeInsets.only(right: 15),
             child: GestureDetector(
               onTap: () {
-                if (category.id != null) {
-                  categoryViewModel.changeCategory(category.id!);
+                if (category.id != null && category.id != activeCategoryId) {
+                  setState(() {
+                    activeCategoryId = category.id!;
+                  });
                 }
               },
               child: Container(

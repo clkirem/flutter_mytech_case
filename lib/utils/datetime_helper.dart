@@ -51,4 +51,15 @@ class DateTimeHelper {
       return publishedAtIsoString;
     }
   }
+
+  static String formatTimeAgo(DateTime timestamp) {
+    final difference = DateTime.now().difference(timestamp);
+    if (difference.inMinutes < 60) {
+      return '${difference.inMinutes} dakika önce';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours} saat önce';
+    } else {
+      return '${difference.inDays} gün önce';
+    }
+  }
 }

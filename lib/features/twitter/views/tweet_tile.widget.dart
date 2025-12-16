@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mytech_case/utils/datetime_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
@@ -155,22 +156,24 @@ class _TwitterFeedTabState extends ConsumerState<TwitterFeedTab> {
                       children: [
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.baseline,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           textBaseline: TextBaseline.alphabetic,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  tweet.accountName ?? '',
-                                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                                ),
-                                Text(' @t24', style: TextStyle(color: hintTextColor, fontSize: 14)),
-                              ],
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    tweet.accountName ?? '',
+                                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(tweet.accountId ?? "", style: TextStyle(color: hintTextColor, fontSize: 14)),
+                                ],
+                              ),
                             ),
-                            const Spacer(),
                             Text(
-                              _formatTimeAgo(createdAtDateTime),
-                              style: TextStyle(color: hintTextColor, fontSize: 14),
+                              DateTimeHelper.formatTimeAgo(createdAtDateTime),
+                              style: TextStyle(color: hintTextColor, fontSize: 12),
                             ),
                           ],
                         ),
@@ -198,16 +201,5 @@ class _TwitterFeedTabState extends ConsumerState<TwitterFeedTab> {
         ),
       ),
     );
-  }
-
-  String _formatTimeAgo(DateTime timestamp) {
-    final difference = DateTime.now().difference(timestamp);
-    if (difference.inMinutes < 60) {
-      return '${difference.inMinutes} dakika önce';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours} saat önce';
-    } else {
-      return '${difference.inDays} gün önce';
-    }
   }
 }

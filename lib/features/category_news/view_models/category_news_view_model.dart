@@ -15,7 +15,6 @@ class CategoryNewsState {
 
 class CategoryNewsViewModel extends StateNotifier<CategoryNewsState> {
   final NewsRepository _repository;
-  //final String _categoryId;
 
   late final PagingController<int, CategoryNewsItems> pagingController;
   String _currentCategoryId;
@@ -49,19 +48,15 @@ class CategoryNewsViewModel extends StateNotifier<CategoryNewsState> {
   }
 
   void changeCategory(String newCategoryId) {
-    if (_currentCategoryId == newCategoryId) return; // Aynı kategoriye tıklanırsa işlem yapma.
+    if (_currentCategoryId == newCategoryId) return;
 
-    // 1. Yeni ID'yi state'e kaydet.
     _currentCategoryId = newCategoryId;
 
-    // 2. Kategori adını geçici olarak sıfırla/yükleniyor yap.
     state = state.copyWith(categoryName: 'Yükleniyor...');
 
-    // 3. PagingController'ı sıfırla/yenile (bu, _fetchPage(1)'i çağırır).
     pagingController.refresh();
   }
 
-  // Getter ile dışarıdan hangi kategorinin seçili olduğunu kontrol edebilmek için ID'yi açığa çıkarıyoruz.
   String get currentCategoryId => _currentCategoryId;
 
   Future<void> refresh() async {

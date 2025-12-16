@@ -1,6 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mytech_case/features/news_source/model/source_category_model.dart';
 import 'package:flutter_mytech_case/features/news_source/view_model/source_view_model.dart';
+import 'package:flutter_mytech_case/features/news_source/widgets/custom_search_bar.dart';
+import 'package:flutter_mytech_case/features/news_source/widgets/source_tile_widget.dart';
 import 'package:flutter_mytech_case/utils/debouncer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -80,89 +83,61 @@ class _SelectNewsSourcesScreenState extends ConsumerState<SelectNewsSourcesScree
               data: (categoryList) {
                 return Column(
                   children: [
-                    _buildSearchBar(
+                    CustomSearchBar(
+                      searchController: _searchController,
                       inputFillColor: inputFillColor,
                       hintTextColor: hintTextColor,
                       onSearch: _handleSearch,
                       controller: _searchController,
                     ),
                     const SizedBox(height: 10),
-                    Expanded(
-                      child: ListView(
-                        padding: const EdgeInsets.only(top: 10, bottom: 100),
-                        children: <Widget>[
-                          ...categoryList.map((category) {
-                            final categoryTitle = category.sourceCategoryTitle ?? '';
-                            final sources = category.sources ?? [];
-
-                            if (sources.isEmpty) {
-                              return const SizedBox.shrink();
-                            }
-
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildCategoryHeader(categoryTitle, labelTextColor),
-                                const SizedBox(height: 5),
-                                ...sources.map((source) {
-                                  return _buildSourceTile(
-                                    source.id ?? '',
-                                    source.name ?? '',
-                                    source.imageUrl ?? '',
-                                    source.isFollowed ?? false,
-                                    hintTextColor,
-                                    primaryColor,
-                                    _toggleSourceSelection,
-                                  );
-                                }),
-                                const SizedBox(height: 10),
-                              ],
-                            );
-                          }),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
-                    ),
+                    buildCategoryAndSourceTile(categoryList),
                   ],
                 );
               },
             ),
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: _buildSaveButton(primaryColor: primaryColor),
-          ),
+          Align(alignment: Alignment.bottomCenter, child: _buildSaveButton()),
         ],
       ),
     );
   }
 
-  Widget _buildSearchBar({
-    required Color inputFillColor,
-    required Color hintTextColor,
-    required Function(String) onSearch,
-    required TextEditingController controller,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10.0),
-      child: TextFormField(
-        controller: _searchController,
-        onChanged: onSearch,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          hintText: 'Search for a source...',
-          hintStyle: TextStyle(color: hintTextColor),
-          filled: true,
-          fillColor: inputFillColor,
-          contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-          prefixIcon: Icon(Icons.search, color: hintTextColor),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide.none),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide.none),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.0),
-            borderSide: BorderSide(color: primaryColor, width: 2.0),
-          ),
-        ),
+  buildCategoryAndSourceTile(List<SourceCategoryModel> categoryList) {
+    return Expanded(
+      child: ListView(
+        padding: const EdgeInsets.only(top: 10, bottom: 100),
+        children: <Widget>[
+          ...categoryList.map((category) {
+            final categoryTitle = category.sourceCategoryTitle ?? '';
+            final sources = category.sources ?? [];
+
+            if (sources.isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildCategoryHeader(categoryTitle, labelTextColor),
+                const SizedBox(height: 5),
+                ...sources.map((source) {
+                  return SourceTileWidget(
+                    sourceId: source.id ?? '',
+                    title: source.name ?? '',
+                    imageUrl: source.imageUrl ?? '',
+                    isFollowed: source.isFollowed ?? false,
+                    hintTextColor: hintTextColor,
+                    primaryColor: primaryColor,
+                    onToggle: _toggleSourceSelection,
+                  );
+                }),
+                const SizedBox(height: 10),
+              ],
+            );
+          }),
+          const SizedBox(height: 20),
+        ],
       ),
     );
   }
@@ -177,44 +152,7 @@ class _SelectNewsSourcesScreenState extends ConsumerState<SelectNewsSourcesScree
     );
   }
 
-  Widget _buildSourceTile(
-    String sourceId,
-    String title,
-    String imageUrl,
-    bool isFollowed,
-    Color hintTextColor,
-    Color primaryColor,
-    Function(String, bool) onToggle,
-  ) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          image: DecorationImage(
-            fit: BoxFit.cover,
-            // Hata durumunda (404/boş URL) placeholder göstermek için try-catch ekleyebilirsiniz.
-            image: NetworkImage(imageUrl),
-          ),
-        ),
-      ),
-      title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16)),
-      trailing: CupertinoSwitch(
-        value: isFollowed,
-        onChanged: (bool newValue) {
-          onToggle(sourceId, newValue);
-        },
-        activeColor: primaryColor,
-        inactiveThumbColor: hintTextColor,
-        inactiveTrackColor: inputFillColor,
-        trackOutlineColor: MaterialStateProperty.all(Colors.transparent),
-      ),
-    );
-  }
-
-  Widget _buildSaveButton({required Color primaryColor}) {
+  Widget _buildSaveButton() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 30.0),
       decoration: BoxDecoration(
@@ -237,7 +175,6 @@ class _SelectNewsSourcesScreenState extends ConsumerState<SelectNewsSourcesScree
               await ref.read(sourceListProvider.notifier).saveFollowedSources();
               context.go('/home');
             } catch (e) {
-              print('Kaydetme başarısız: $e');
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(SnackBar(content: Text('Kaydetme başarısız oldu: ${e.toString()}')));
