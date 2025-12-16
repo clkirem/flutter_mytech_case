@@ -3,6 +3,8 @@ import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:flutter_mytech_case/core/di/cache_provider.dart';
 import 'package:flutter_mytech_case/core/di/core_provider.dart';
+import 'package:flutter_mytech_case/features/category_news/model/category_response.dart';
+import 'package:flutter_mytech_case/features/news/model/news_by_category_response.dart';
 import 'package:flutter_mytech_case/features/news/model/news_list_response.dart';
 import 'package:flutter_mytech_case/utils/cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -85,6 +87,34 @@ class NewsRepository {
       throw Exception(errorMessage);
     } catch (e) {
       throw Exception("Haberler yüklenemedi: $e");
+    }
+  }
+
+  Future<NewsByCategoryResponse> getNewsByCategory({
+    required String categoryId,
+    required int page,
+    required int pageSize,
+  }) async {
+    final String path = '/api/v1/news/category/$categoryId';
+
+    try {
+      final response = await api.get(path, queryParameters: {'page': page, 'pageSize': pageSize});
+
+      final apiResponse = ApiResponse<Map<String, dynamic>>.fromJson(
+        response.data,
+        (json) => json as Map<String, dynamic>,
+      );
+
+      if (apiResponse.success && apiResponse.result != null) {
+        return NewsByCategoryResponse.fromJson(apiResponse.result!);
+      } else {
+        throw Exception(apiResponse.message ?? "Kategori haberleri için geçerli bir yanıt alınamadı.");
+      }
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.message;
+      throw Exception(errorMessage);
+    } catch (e) {
+      throw Exception("Kategoriye göre haberler yüklenemedi: $e");
     }
   }
 }

@@ -288,7 +288,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Center(
         child: ElevatedButton(
           onPressed: () {
-            context.go('/categorynews/${categoryId ?? 'all'}');
+            context.push('/categorynews/${categoryId ?? ''}');
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: backgroundColor,
