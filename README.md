@@ -23,14 +23,11 @@ Bu proje, içerisinde Kayıt ol / Giriş Yap, Kaynaklar, Haberler, Twitter sayfa
 
 ## 📱 Uygulama Demosu
 
-<p align="center">
-  <video src="assets/ekrankaydi.mp4" width="300" />
-</p>
+https://www.youtube.com/watch?v=a5Ju-IMzAys
 
 ## ⚙️ Kurulum
 1. `flutter pub get`
-2. `flutter pub run build_runner build`
-3. `flutter run`
+2. `flutter run`
 
 
 
