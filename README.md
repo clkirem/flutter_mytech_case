@@ -24,7 +24,7 @@ Bu proje, içerisinde Kayıt ol / Giriş Yap, Kaynaklar, Haberler, Twitter sayfa
 ## 📱 Uygulama Demosu
 
 <p align="center">
-  <video src="VİDEO_LİNKİNİZİ_BURAYA_YAPIŞTIRIN" width="300" />
+  <video src="assets/ekrankaydi.mp4" width="300" />
 </p>
 
 ## ⚙️ Kurulum
