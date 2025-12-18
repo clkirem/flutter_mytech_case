@@ -85,6 +85,14 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
+    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email.trim())) {
+      _showSnackBar("Geçersiz e-mail adresi formatı.");
+    }
+
+    if (password.length < 6) {
+      _showSnackBar("Şifre en az 6 karakter olmalıdır.");
+    }
+
     if (_passwordsMatchError) {
       _showSnackBar("Şifreler uyuşmuyor.", color: errorColor);
       return;

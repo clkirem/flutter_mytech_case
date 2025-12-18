@@ -82,13 +82,25 @@ class Items {
     );
   }
 
-  Items copyWith({String? id, String? title, String? categoryId, String? categoryName, bool? isSaved}) {
+  Items copyWith({
+    String? id,
+    String? title,
+    String? categoryId,
+    String? categoryName,
+    bool? isSaved,
+    String? imageUrl,
+    String? publishedAt,
+    String? sourceName,
+  }) {
     return Items(
       id: id ?? this.id,
       title: title ?? this.title,
       categoryId: categoryId ?? this.categoryId,
       categoryName: categoryName ?? this.categoryName,
       isSaved: isSaved ?? this.isSaved,
+      imageUrl: imageUrl ?? this.imageUrl,
+      publishedAt: publishedAt ?? this.publishedAt,
+      sourceName: title ?? this.sourceName,
     );
   }
 

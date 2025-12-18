@@ -1,16 +1,37 @@
-# flutter_mytech_case
+# 📰 MyTech Case - Haber Uygulaması
 
-A new Flutter project.
+Bu proje, içerisinde Kayıt ol / Giriş Yap, Kaynaklar, Haberler, Twitter sayfalarını barındırmaktadır. MVVM Mimarisi ile geliştirilmiştir.
 
-## Getting Started
+## 🚀 Öne Çıkan Özellikler
 
-This project is a starting point for a Flutter application.
+* ⚡ **Hızlı Başlangıç:** Popüler haberler **Hive** ile cache'lenerek anında yüklenir.
+* 🔄 **Sonsuz Kaydırma:** Haber listeleri **Infinite Scroll Pagination** ile sayfa sayfa yüklenir, bellek kullanımı minimize edilir.
+* 🧠 **Dinamik Durum:** Tüm uygulama akışı **Riverpod** StateNotifier yapısıyla yönetilir.
+* 🔑 **Güvenli Kimlik Doğrulama:** Token tabanlı giriş sistemi ve şifreli veri depolama.
 
-A few resources to get you started if this is your first Flutter project:
+## 🛠️ Teknik Yığın (Tech Stack)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+| Araç | Kullanım Amacı |
+| :--- | :--- |
+| **Riverpod** | Global State Management & Dependency Injection |
+| **Hive** | Haber Cacheleme |
+| **Infinite Scroll Pagination** | Pürüzsüz ve performanslı liste kaydırma deneyimi |
+| **Dio** | API Haberleşmesi ve Interceptor Yönetimi |
+| **Secure Storage** | Hassas Verilerin (Auth Token) Güvenli Depolanması |
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+
+
+## 📱 Uygulama Demosu
+
+<p align="center">
+  <video src="VİDEO_LİNKİNİZİ_BURAYA_YAPIŞTIRIN" width="300" />
+</p>
+
+## ⚙️ Kurulum
+1. `flutter pub get`
+2. `flutter pub run build_runner build`
+3. `flutter run`
+
+
+
+

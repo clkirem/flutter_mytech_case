@@ -54,6 +54,7 @@ class AuthViewModel extends StateNotifier<AuthState> {
       final tokenManager = ref.read(tokenManagerProvider);
       if (response.accessToken != null) {
         await tokenManager.saveToken(response.accessToken!);
+        fetchUserProfile();
       }
 
       log("💡 Login başarılı!");

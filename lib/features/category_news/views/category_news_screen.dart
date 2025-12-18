@@ -4,6 +4,7 @@ import 'package:flutter_mytech_case/features/category_news/model/category_respon
 import 'package:flutter_mytech_case/features/category_news/view_models/category_news_view_model.dart';
 import 'package:flutter_mytech_case/features/category_news/view_models/cateroy_list_view_model.dart';
 import 'package:flutter_mytech_case/features/news/model/news_by_category_response.dart';
+import 'package:flutter_mytech_case/features/news/view_models/news_view_model.dart';
 import 'package:flutter_mytech_case/utils/datetime_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -143,7 +144,12 @@ class _CategoryNewsScreenState extends ConsumerState<CategoryNewsScreen> {
                   ),
                 ),
 
-                const Icon(Icons.bookmark, color: Colors.red),
+                GestureDetector(
+                  onTap: () {
+                    ref.read(newsViewModelProvider.notifier).toggleSaveNews(item);
+                  },
+                  child: Icon(item.isSaved ?? false ? Icons.bookmark : Icons.bookmark_border, color: Colors.red),
+                ),
               ],
             ),
 

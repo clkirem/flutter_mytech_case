@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_mytech_case/core/constants.dart';
 import 'package:flutter_mytech_case/features/news/model/news_category_model.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -14,6 +15,8 @@ class NewsState {
   final bool isLoading;
   final String? errorMessage;
   final List<NewsCategoryModel> groupedNews;
+  final String? userMessage;
+  final Color? snackBarColor;
 
   NewsState({
     required this.latestNews,
@@ -21,6 +24,8 @@ class NewsState {
     this.isLoading = false,
     this.errorMessage,
     required this.groupedNews,
+    this.userMessage,
+    this.snackBarColor,
   });
 
   factory NewsState.initial() =>
@@ -32,6 +37,8 @@ class NewsState {
     bool? isLoading,
     String? errorMessage,
     List<NewsCategoryModel>? groupedNews,
+    String? userMessage,
+    Color? snackBarColor,
   }) {
     final newErrorMessage = errorMessage == 'clear' ? null : (errorMessage ?? this.errorMessage);
 
@@ -41,11 +48,13 @@ class NewsState {
       forYouNews: forYouNews ?? this.forYouNews,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: newErrorMessage,
+      userMessage: userMessage,
+      snackBarColor: snackBarColor,
     );
   }
 }
 
-const int _categoryItemLimit = 2;
+const int _categoryItemLimit = 10;
 
 class NewsViewModel extends StateNotifier<NewsState> {
   final NewsRepository _repository;
@@ -123,6 +132,34 @@ class NewsViewModel extends StateNotifier<NewsState> {
     }
   }
 
+  Future<void> toggleSaveNews(dynamic item) async {
+    final newsId = item.id;
+    if (newsId == null) return;
+
+    try {
+      if (item.isSaved == true) {
+        final response = await _repository.deleteSavedNews(newsId);
+
+        if (response == true) {
+          _updateNewsItemSavedState(newsId, false);
+          state = state.copyWith(userMessage: "Haber kaydı silindi", snackBarColor: Colors.redAccent);
+        }
+      } else {
+        final data = {"newsId": newsId};
+        final response = await _repository.saveNew(data);
+
+        if (response != null && response['success'] == true) {
+          _updateNewsItemSavedState(newsId, true);
+          state = state.copyWith(userMessage: "Haber kaydedildi", snackBarColor: Colors.green);
+        }
+      }
+    } catch (e) {
+      log("Toggle save error: $e");
+      state = state.copyWith(errorMessage: e.toString());
+      state = state.copyWith(errorMessage: e.toString(), snackBarColor: Colors.green);
+    }
+  }
+
   void _updateNewsItemSavedState(String newsId, bool isSaved) {
     final updatedGroupedNews = state.groupedNews.map((group) {
       final updatedItems = group.items?.map((item) {
@@ -131,7 +168,6 @@ class NewsViewModel extends StateNotifier<NewsState> {
         }
         return item;
       }).toList();
-
       return group.copyWith(items: updatedItems);
     }).toList();
 

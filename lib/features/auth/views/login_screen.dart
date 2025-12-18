@@ -25,8 +25,8 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
   @override
   void initState() {
-    _emailController.text = "t@a.com";
-    _passwordController.text = "123456";
+    _emailController.text;
+    _passwordController.text;
     super.initState();
   }
 

@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mytech_case/core/constants.dart';
-import 'package:flutter_mytech_case/features/news/view_models/news_view_model.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CarouselItemWidget extends StatelessWidget {
   const CarouselItemWidget({
     super.key,
-    required this.ref,
     required this.title,
     required this.sourceName,
     required this.sourceColor,
@@ -15,9 +12,9 @@ class CarouselItemWidget extends StatelessWidget {
     required this.sourceProfilePictureUrl,
     required this.newsId,
     required this.isSaved,
+    required this.onTap,
   });
 
-  final WidgetRef ref;
   final String title;
   final String sourceName;
   final Color sourceColor;
@@ -26,6 +23,7 @@ class CarouselItemWidget extends StatelessWidget {
   final String sourceProfilePictureUrl;
   final String newsId;
   final bool isSaved;
+  final void Function()? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -67,9 +65,7 @@ class CarouselItemWidget extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: GestureDetector(
-                        onTap: () {
-                          ref.read(newsViewModelProvider.notifier).saveNews(newsId);
-                        },
+                        onTap: onTap,
                         child: Icon(isSaved ? Icons.bookmark : Icons.bookmark_border, color: redAccent, size: 20),
                       ),
                     ),

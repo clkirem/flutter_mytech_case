@@ -42,7 +42,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     switch (index) {
       case 0:
-        path = '/news';
+        path = '/home';
         break;
       case 1:
         path = '/egundem';
@@ -73,6 +73,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final popularNews = activeList.where((e) => e.isPopular == true).toList();
 
     final List<NewsCategoryModel> categorizedNews = newsState.groupedNews;
+
+    ref.listen(newsViewModelProvider, (previous, current) {
+      if (current.errorMessage != null && current.errorMessage != previous?.errorMessage) {
+        _showSnackBar(current.errorMessage!, color: Colors.red);
+      }
+      if (current.userMessage != null && current.userMessage != previous?.userMessage) {
+        _showSnackBar(current.userMessage!, color: Colors.green);
+      }
+    });
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -211,18 +220,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             Row(
               children: [
-                ClipOval(
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    color: Colors.white,
-                    child: Image.network(
-                      newsItem.sourceProfilePictureUrl ?? 'https://via.placeholder.com/100x100.png?text=No+Image',
-                      width: 40,
-                      height: 40,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+                CircleAvatar(
+                  backgroundImage: (newsItem.imageUrl != null && newsItem.imageUrl!.isNotEmpty)
+                      ? NetworkImage(newsItem.imageUrl!)
+                      : AssetImage('assets/haber.jpg'),
                 ),
                 const SizedBox(width: 8),
 
@@ -231,7 +232,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        newsItem.sourceName ?? newsItem.sourceTitle ?? '',
+                        newsItem.sourceName ?? '',
                         style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
                       ),
                       Text(
@@ -244,7 +245,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                 GestureDetector(
                   onTap: () {
-                    ref.read(newsViewModelProvider.notifier).saveNews(newsItem.id!);
+                    ref.read(newsViewModelProvider.notifier).toggleSaveNews(newsItem);
                   },
                   child: Icon(
                     newsItem.isSaved ?? false ? Icons.bookmark : Icons.bookmark_border,
@@ -294,6 +295,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ),
+      ),
+    );
+  }
+
+  void _showSnackBar(String message, {Color color = Colors.red}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
       ),
     );
   }
@@ -371,7 +384,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           itemBuilder: (context, index) {
             bool isSelected = index == _selectedCategoryIndex;
 
-            final Color highlightColor = isSelected && categories[index] == PageConstants.twitterFeedIndex.toString()
+            final Color highlightColor = isSelected && categories[index] == 'Twitter'
                 ? primaryColor
                 : isSelected
                 ? redAccent
@@ -441,7 +454,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               itemBuilder: (context, index) {
                 final news = popularNews[index];
                 return CarouselItemWidget(
-                  ref: ref,
                   title: news.title ?? '',
                   sourceName: news.sourceName ?? '',
                   isSaved: news.isSaved ?? false,
@@ -452,6 +464,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   sourceProfilePictureUrl: news.imageUrl ?? 'https://via.placeholder.com/400x200.png?text=No+Image',
                   newsId: news.categoryName ?? '',
                   imageUrl: news.sourceProfilePictureUrl ?? 'https://via.placeholder.com/100x100.png?text=No+Image',
+                  onTap: () {
+                    ref.read(newsViewModelProvider.notifier).toggleSaveNews(news);
+                  },
                 );
               },
             ),

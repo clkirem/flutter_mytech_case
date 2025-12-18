@@ -116,6 +116,16 @@ class NewsRepository {
       throw Exception("Kategoriye göre haberler yüklenemedi: $e");
     }
   }
+
+  Future<bool> deleteSavedNews(String savedNewsId) async {
+    final String path = '/api/v1/saved-news/$savedNewsId';
+    try {
+      final response = await api.delete(path);
+      return response.statusCode == 204 || response.statusCode == 200;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
 
 final newsRepositoryProvider = Provider((ref) {
